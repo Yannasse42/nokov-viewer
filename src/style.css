@@ -981,3 +981,70 @@ button:hover {
     font-weight: 800;
 
 }
+
+/* ---------------------------------------------------------- */
+/* RADAR – MEDICAL PRO STYLE                                  */
+/* ---------------------------------------------------------- */
+
+.pst-radar-section {
+    margin-top: 2rem;
+    padding: 25px 30px;
+    background: var(--CardColor);
+    border-radius: 22px;
+    border: 1px solid var(--BorderColor);
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.3s ease;
+}
+
+.pst-radar-wrapper {
+  width: 100%;
+  max-width: 800px; /* ⬆️ augmente largeur */
+  height: 650px;    /* ⬆️ augmente hauteur */
+  margin: 1.5rem auto;
+}
+
+
+/* Canvas visuel */
+canvas#pst-radar-canvas {
+    width: 100% !important;
+    height: 100% !important;
+
+    padding: 20px;
+    border-radius: 22px;
+
+    background: radial-gradient(circle at center,
+        rgba(255,255,255,1) 30%,
+        rgba(245,245,245,1) 100%
+    );
+
+    filter: drop-shadow(0 6px 15px rgba(0,0,0,0.08));
+}
+
+/* Effet Glow + Neo-Morph */
+canvas#pst-radar-canvas:hover {
+    filter:
+        drop-shadow(0 6px 15px rgba(0,0,0,0.10))
+        brightness(1.03);
+}
+
+/* Titres & labels radar uniformes */
+.chartjs-render-monitor {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* Amélioration lisibilité des labels autour */
+.pst-radar-section .chartjs-render-monitor text {
+    font-size: 0.90rem !important;
+    font-weight: 600 !important;
+    fill: #444 !important;
+}
+
+/* Animation d'apparition */
+@keyframes radarFade {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+canvas#pst-radar-canvas {
+    animation: radarFade 0.5s ease;
+}

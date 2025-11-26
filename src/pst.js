@@ -53,6 +53,260 @@
   };
 
 
+  // ============================================================
+  // RADAR PST — Normalisation EXACT Python style 🧠
+  // ============================================================
+
+  let pstRadarChart = null;
+
+  const PST_RADAR_METRICS = [
+    { id: "stride_length",  normKey: "stride_length",  keyL: "stride_length_L",  keyR: "stride_length_R" },
+    { id: "step_length",    normKey: "step_length",    keyL: "step_length_L",    keyR: "step_length_R" },
+    { id: "support_base",   normKey: "support_base",   keyL: "support_base_L",   keyR: "support_base_R" },
+    { id: "Step_time",      normKey: "step_time",      keyL: "Step_time_L",      keyR: "Step_time_R" },
+    { id: "Stride_time",    normKey: "stride_time",    keyL: "Stride_time_L",    keyR: "Stride_time_R" },
+    { id: "Swing_phase",    normKey: "swing_phase",    keyL: "Swing_phase_L",    keyR: "Swing_phase_R" },
+    { id: "Stance_phase",   normKey: "stance_phase",   keyL: "Stance_phase_L",   keyR: "Stance_phase_R" },
+    { id: "double_support", normKey: "double_support", keyL: "double_support_L", keyR: "double_support_R" }
+  ];
+
+
+
+  // Normes réelles identiques Python
+  const PST_RADAR_NORMS = {
+    // spatial — distances  
+    stride_length:  { min: 1200, max: 1800 },  // mm → 120-180 cm  
+    step_length:    { min: 550,   max: 900   },   // cm → 0,55-0,90 m  
+    support_base:   { min: 50,    max: 150   },   // cm → 5-15 cm  
+    // temporal — cadence / temps  
+    step_time:      { min: 0.45, max: 0.70 },   // secondes (soit ~86 à ~133 pas/min)  
+    stride_time:    { min: 0.90, max: 1.40 },   // secondes (≈ 0.45*2 à 0.70*2)  
+    // phases — % du cycle  
+    swing_phase:    { min: 30,   max: 50  },     // swing ~ 30-50%  
+    stance_phase:   { min: 50,   max: 70  },     // stance ~ 50-70%  
+    double_support: { min: 10,   max: 30  }      // double appui ~ 10-30%  
+
+  };
+
+  // 👉 Toujours Low=0.4 & High=0.6 visuellement
+  function normalize(value, norm) {
+    const { min, max } = norm;
+    if (!value && value !== 0) return 0.5;
+    return 0.4 + 0.2 * ((value - min) / (max - min));
+  }
+
+  function pstRadar_render(result) {
+    const canvas = document.getElementById("pst-radar-canvas-one");
+    if (!canvas) return;
+    if (pstRadarChart) pstRadarChart.destroy();
+
+    const left = result.PST_L;
+    const right = result.PST_R;
+
+    const low = Array(PST_RADAR_METRICS.length).fill(0.4);
+    const high = Array(PST_RADAR_METRICS.length).fill(0.6);
+
+    const dataLeft = PST_RADAR_METRICS.map(m =>
+      normalize(left[m.keyL][0], PST_RADAR_NORMS[m.normKey])
+    );
+    const dataRight = PST_RADAR_METRICS.map(m =>
+      normalize(right[m.keyR][0], PST_RADAR_NORMS[m.normKey])
+    );
+
+    const radarLabels = PST_RADAR_METRICS.map(m =>
+      t(PST_LABEL_KEYS[m.id] || m.id)
+    );
+
+    pstRadarChart = new Chart(canvas, {
+      type: "radar",
+      data: {
+        labels: radarLabels,
+        datasets: [
+          {
+            label: t("pst.norm"), // 👈 traduit
+            data: high,
+            backgroundColor: "rgba(53,84,116,0.20)",
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: false
+          },
+          {
+            label: "", 
+            data: low,
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: "-1",
+            hoverRadius: 0,
+            hitRadius: 0,
+            pointHitRadius: 0
+          },
+          {
+            label: t("pst.left"), // 👈 traduit
+            data: dataLeft,
+            borderColor: "#c4242c",
+            pointBackgroundColor: "#c4242c",
+            pointRadius: 4,
+            backgroundColor: "transparent",
+            borderWidth: 2,
+            fill: false
+          },
+          {
+            label: t("pst.right"), // 👈 traduit
+            data: dataRight,
+            borderColor: "rgb(0,150,0)",
+            pointBackgroundColor: "rgb(0,150,0)",
+            pointRadius: 4,
+            backgroundColor: "transparent",
+            borderWidth: 2,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "top",
+            labels: {
+              filter: function(item) {
+                return item.text !== ""; // 👈 enlève le 2nd gris
+              },
+              font: {
+                weight: "700"  // 👈 Légende en gras
+              },
+              color: "#000"
+            }
+          }
+        },
+        scales: {
+          r: {
+            min: 0.10,
+            max: 0.9,
+            grid: { circular: true },
+            ticks: { display: false },
+            pointLabels: {
+              font: {
+                weight: "700", // 👈 Labels du radar en gras
+                size: 14
+              },
+              color: "#333"
+            }
+          }
+        }
+      }
+
+    });
+
+  }
+
+
+  function pstRadar_compare(py1, py2, name1, name2) {
+    const canvas = document.getElementById("pst-radar-canvas-compare");
+    if (!canvas) return;
+    if (pstRadarChart) pstRadarChart.destroy();
+
+    const low = Array(PST_RADAR_METRICS.length).fill(0.4);
+    const high = Array(PST_RADAR_METRICS.length).fill(0.6);
+
+    const L1 = PST_RADAR_METRICS.map(m => normalize(py1.PST_L[m.keyL][0], PST_RADAR_NORMS[m.normKey]));
+    const R1 = PST_RADAR_METRICS.map(m => normalize(py1.PST_R[m.keyR][0], PST_RADAR_NORMS[m.normKey]));
+    const L2 = PST_RADAR_METRICS.map(m => normalize(py2.PST_L[m.keyL][0], PST_RADAR_NORMS[m.normKey]));
+    const R2 = PST_RADAR_METRICS.map(m => normalize(py2.PST_R[m.keyR][0], PST_RADAR_NORMS[m.normKey]));
+
+    const radarLabels = PST_RADAR_METRICS.map(m => t(PST_LABEL_KEYS[m.id] || m.id));
+
+    pstRadarChart = new Chart(canvas, {
+      type: "radar",
+      data: {
+        labels: radarLabels,
+        datasets: [
+          {
+            label: t("pst.norm"),
+            data: high,
+            backgroundColor: "rgba(53,84,116,0.15)",
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: false
+          },
+          {
+            label: "",
+            data: low,
+            borderColor: "transparent",
+            pointRadius: 0,
+            fill: "-1"
+          },
+
+          // Essai 1
+          {
+            label: `${name1} — ${t("pst.left")}`,
+            data: L1,
+            borderColor: "#a30000", // Rouge foncé
+            pointBackgroundColor: "#a30000",
+            pointRadius: 4,
+            borderWidth: 2,
+            fill: false
+          },
+          {
+            label: `${name1} — ${t("pst.right")}`,
+            data: R1,
+            borderColor: "#004b00", // Vert foncé
+            pointBackgroundColor: "#004b00",
+            pointRadius: 4,
+            borderWidth: 2,
+            fill: false
+          },
+
+          // Essai 2
+          {
+            label: `${name2} — ${t("pst.left")}`,
+            data: L2,
+            borderColor: "#ff4d4d", // Rouge clair
+            pointBackgroundColor: "#ff4d4d",
+            pointRadius: 4,
+            borderWidth: 2,
+            fill: false
+          },
+          {
+            label: `${name2} — ${t("pst.right")}`,
+            data: R2,
+            borderColor: "#1aff1a", // Vert clair
+            pointBackgroundColor: "#1aff1a",
+            pointRadius: 4,
+            borderWidth: 2,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: "top",
+            labels: {
+              filter: item => item.text !== "",
+              font: { weight: "700" },
+              color: "#000"
+            }
+          }
+        },
+        scales: {
+          r: {
+            min: 0.1,
+            max: 0.9,
+            grid: { circular: true },
+            ticks: { display: false },
+            pointLabels: {
+              font: { weight: "700", size: 14 },
+              color: "#333"
+            }
+          }
+        }
+      }
+    });
+  }
+
 
   // ============================================================
   // 2) HEADERS DU TABLEAU — Dépend de la langue
@@ -162,6 +416,10 @@
 
     fillPSTTable("pst-left-one",  result.PST_L);
     fillPSTTable("pst-right-one", result.PST_R);
+
+    // 🔥 Radar spatio-temporel
+    pstRadar_render(result);
+
   }
 
 
@@ -290,6 +548,8 @@
     });
 
     document.getElementById("pst-bilat-table").innerHTML = b;
+    pstRadar_compare(py1, py2, name1, name2);
+
   }
 
 

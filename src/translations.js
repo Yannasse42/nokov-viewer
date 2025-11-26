@@ -114,6 +114,9 @@ const translations = {
 
             left: "Gauche",
             right: "Droite",
+            radar_title: "Profil spatio-temporel (radar)",
+            norm: "Norme",
+
         },
         kinematic: {
             title: "Paramètres cinématiques – {plane}",
@@ -281,6 +284,8 @@ const translations = {
 
             left: "Left",
             right: "Right",
+            radar_title: "Spatiotemporal profile (radar)",
+            norm: "Norm",
         },
         kinematic: {
             title: "Kinematic parameters – {plane}",
@@ -445,6 +450,8 @@ const translations = {
 
             left: "左侧",
             right: "右侧",
+            radar_title: "时空参数概况（雷达图）",
+            norm: "标准值",
         },
         kinematic: {
             title: "运动学参数 – {plane}",

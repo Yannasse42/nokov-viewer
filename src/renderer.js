@@ -27,7 +27,8 @@ const UIState = {
 let currentPyCompare1 = null;
 let currentPyCompare2 = null;
 
-
+// Ajout pour l’analyse simple
+let currentPyOneResult = null;
 
 
 // ============================================================================
