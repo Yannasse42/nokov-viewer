@@ -1,0 +1,20 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Electron build output
+dist/
+out/
+release/
+
+# Packaging
+*.exe
+*.msi
+
+# Python artifacts
+__pycache__/
+*.pyc
+
+# System
+.DS_Store
+Thumbs.db

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>À propos – Nokov Viewer</title>
+
+<style>
+/* ----------------------------------------------------------
+   VARIABLES NOKOV
+---------------------------------------------------------- */
+:root {
+    --OneColor: #C5252C;
+    --OneColorHover: #A61D23;
+
+    --FontOneColor: #151515;
+    --FontTowColor: #6e6e6e;
+    --BGColor: #ececec;
+
+    --CardColor: rgba(255,255,255,0.85);
+    --BorderColor: #dcdcdc;
+
+    --radius: 22px;
+    --shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+/* ----------------------------------------------------------
+   PAGE BACKGROUND
+---------------------------------------------------------- */
+body {
+    margin: 0;
+    background: var(--BGColor);
+    backdrop-filter: blur(8px);
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-family:'Inter', sans-serif;
+}
+
+/* ----------------------------------------------------------
+   ABOUT CARD (LUXE)
+---------------------------------------------------------- */
+.about-card {
+    width: 480px;
+    background: var(--CardColor);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow:hidden;
+    animation: fadeInUp 0.5s ease;
+    backdrop-filter: blur(20px);
+    border:1px solid rgba(255,255,255,0.4);
+    position: relative;
+}
+
+/* ----------------------------------------------------------
+   BANNIÈRE IMAGE FIXÉE
+---------------------------------------------------------- */
+.about-banner {
+    width: 100%;
+    height: 170px;
+    background-image: url("src/images/salle mocap.jpg"); /* 🔥 Ton image réelle */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: brightness(0.9);
+    position:relative;
+}
+
+/* masque qui cache le haut du cercle */
+.about-mask {
+    position: absolute;
+    top: 160px; /* juste sous la bannière */
+    left: 0;
+    width: 100%;
+    height: 40px; /* la zone qui va cacher */
+    background: var(--CardColor); /* même couleur que la carte */
+    z-index: 3;  /* au-dessus du logo */
+}
+
+
+/* overlay subtil */
+.about-banner::after {
+    content:"";
+    position:absolute;
+    inset:0;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.40), transparent 65%);
+}
+
+/* ----------------------------------------------------------
+   CONTENU
+---------------------------------------------------------- */
+.about-content {
+    padding: 30px 35px 40px 35px;
+    text-align:center;
+}
+
+/* Logo app en rond */
+.about-logo {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-top: -60px;
+    border: 4px solid white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+    background:white;
+    position: relative;
+    z-index: 2; /* derrière le masque */
+}
+
+/* Title */
+.about-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 12px;
+    color: var(--FontOneColor);
+}
+
+.about-version {
+    margin-top: 4px;
+    color: var(--FontTowColor);
+    font-size: 1rem;
+}
+
+/* Separator */
+.separator {
+    height: 1px;
+    width: 70%;
+    background: linear-gradient(to right, transparent, #ccc, transparent);
+    margin: 25px auto;
+}
+
+/* infos */
+.about-line {
+    font-size: 0.96rem;
+    color: var(--FontTowColor);
+    margin-bottom: 6px;
+}
+
+/* ----------------------------------------------------------
+   BUTTON
+---------------------------------------------------------- */
+.about-btn {
+    margin-top: 18px;
+    background: var(--OneColor);
+    color: white;
+    padding: 12px 28px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor:pointer;
+    transition:0.25s ease;
+    box-shadow: 0 6px 15px rgba(197, 37, 44, 0.4);
+}
+
+.about-btn:hover {
+    background: var(--OneColorHover);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 22px rgba(197, 37, 44, 0.55);
+}
+
+/* entrée anim */
+@keyframes fadeInUp {
+    from { opacity:0; transform: translateY(20px); }
+    to   { opacity:1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body>
+<div class="about-card">
+
+    <!-- Banner image -->
+    <div class="about-banner"></div>
+
+    <div class="about-content">
+
+        <!-- CIRCULAR LOGO -->
+        <img id="appIcon" class="about-logo" alt="logo">
+
+        <!-- TITLE -->
+        <div class="about-title">Nokov Viewer</div>
+        <div class="about-version" id="appVersion">Version —</div>
+
+        <div class="separator"></div>
+
+        <!-- INFOS -->
+        <div class="about-line">
+            <span>Developed by</span> :
+            <strong>Yann Villard</strong>
+        </div>
+
+        <div class="about-line">© 2025 Biometrics France</div>
+        <div class="about-line">3D Analysis – PST – Trial Comparison</div>
+
+        <!-- BUTTON -->
+        <button class="about-btn" id="supportBtn">
+            📧 Contact support
+        </button>
+    </div>
+</div>
+
+<script>
+/* Version dynamique */
+window.electronAPI?.getAppVersion?.().then(v => {
+    document.getElementById("appVersion").textContent = "Version " + v;
+});
+
+/* Logo : ton image Nokov */
+document.getElementById("appIcon").src = "src/images/about.jpg";
+
+/* Ouvrir email support */
+document.getElementById("supportBtn").addEventListener("click", () => {
+    window.electronAPI.openExternal(
+        "mailto:info@biometrics.fr?subject=Support%20Nokov%20Viewer"
+    );
+});
+</script>
+</body>
+</html>

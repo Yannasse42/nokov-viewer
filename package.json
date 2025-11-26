@@ -1,0 +1,77 @@
+{
+  "name": "nokov-viewer",
+  "version": "1.0.0",
+  "description": "Nokov Viewer - Analyse de marche, cinématique, PST",
+  "main": "main.js",
+  "author": "Yann Villard",
+  "license": "ISC",
+
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder"
+  },
+
+  "dependencies": {
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-zoom": "^2.2.0",
+    "material-icons": "^1.13.14"
+  },
+
+  "devDependencies": {
+    "electron": "^38.4.0",
+    "electron-builder": "^26.0.12",
+    "rcedit": "^4.0.1"
+  },
+
+  "build": {
+    "appId": "com.nokov.viewer",
+    "productName": "Nokov Viewer",
+
+    "files": [
+      "**/*"
+    ],
+
+    "extraResources": [
+      {
+        "from": "build/nokov_viewer.ico",
+        "to": "icon.ico"
+      },
+      {
+        "from": "src",
+        "to": "src"
+      }
+    ],
+
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+
+    "win": {
+      "icon": "src/images/nokov_viewer.ico",
+      "target": "nsis",
+      "legalTrademarks": "Yann Villard",
+      "signAndEditExecutable": true,
+      "verifyUpdateCodeSignature": false
+    },
+
+    "nsis": {
+      "oneClick": true,
+      "multiLanguageInstaller": true,
+      "installerLanguages": [
+        "en_US",
+        "fr_FR",
+        "de_DE",
+        "es_ES",
+        "it_IT",
+        "zh_CN"
+      ],
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Nokov Viewer",
+      "artifactName": "Nokov-Viewer-Setup-${version}.exe"
+    }
+  }
+}

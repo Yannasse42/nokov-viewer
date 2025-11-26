@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title data-i18n="app.title">Nokov Viewer</title>
+
+  <!-- Material Icons OFFLINE -->
+  <link rel="stylesheet" href="iconfont/material-icons.css">
+
+  <!-- Ton style -->
+  <link rel="stylesheet" href="style.css" />
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+  <!-- HEADER AVEC LOGO NOKOV -->
+  <div class="header">
+      <div class="header-inner">
+          <img src="images/nokov_logo.png" class="header-logo-img" alt="logo">
+      </div>
+  </div>
+
+
+  <!-- ==================================================== -->
+  <!-- 🏠 PAGE D'ACCUEIL -->
+  <!-- ==================================================== -->
+  <div id="page_home" class="page active">
+
+    <h1 class="home-title" data-i18n="home.welcome">Bienvenue</h1>
+
+    <div class="home-options">
+
+      <div class="home-card" id="go_one">
+        <h2 data-i18n="home.single.title">Analyse d’un essai</h2>
+        <p data-i18n="home.single.desc">Importer et analyser une seule marche.</p>
+      </div>
+
+      <div class="home-card" id="go_compare">
+        <h2 data-i18n="home.compare.title">Comparer deux essais</h2>
+        <p data-i18n="home.compare.desc">Comparer deux sessions de marche.</p>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ==================================================== -->
+  <!-- 🔵 PAGE ANALYSE 1 ESSAI -->
+  <!-- ==================================================== -->
+  <div id="page_one" class="page">
+
+    <button class="return-btn" id="btn_return_home_one">
+        <span class="material-icons-outlined">arrow_back</span>
+        <span data-i18n="common.back">Retour</span>
+    </button>
+
+    <h2 class="section-title" data-i18n="single.title">Analyse d’un essai</h2>
+
+    <div class="form-card">
+
+        <div class="field">
+          <label for="one_nom" data-i18n="single.name">Nom de l’essai</label>
+          <input type="text" id="one_nom">
+        </div>
+
+        <div class="field">
+          <label data-i18n="single.folder">Dossier de l’essai</label>
+          <div class="dossier-container">
+            <input type="text" id="one_dossier" class="drop-zone" readonly>
+            <button id="btn_one_dossier" data-i18n="common.choose">Choisir</button>
+          </div>
+        </div>
+
+        <button id="btn_one_validate" data-i18n="single.analyze">Analyser</button>
+
+    </div>
+
+    <!-- ONGLET NAV -->
+    <div id="tabs-one" class="tab-bar" style="display:none;">
+        <button class="tab-btn active" data-tab="tab-curves-one" data-i18n="tabs.curves">Courbes</button>
+        <button class="tab-btn" data-tab="tab-pst-one" data-i18n="tabs.pst">PST</button>
+    </div>
+
+    <!-- ONGLET COURBES -->
+    <div id="tab-curves-one" class="tab-content active" style="display:none;">
+
+        <!-- 🔵 Zone commune : Plan (même structure que compare) -->
+        <div class="plane-view-container">
+
+            <div class="plane-selector">
+                <span data-i18n="planes.label">Plan :</span>
+
+                <label class="plane-btn">
+                    <input type="radio" name="plane" value="sagittal" checked>
+                    <span data-i18n="planes.sagittal">Plan sagittal</span>
+                </label>
+
+                <label class="plane-btn">
+                    <input type="radio" name="plane" value="frontal">
+                    <span data-i18n="planes.frontal">Plan frontal</span>
+                </label>
+
+                <label class="plane-btn">
+                    <input type="radio" name="plane" value="transverse">
+                    <span data-i18n="planes.transverse">Plan transverse</span>
+                </label>
+            </div>
+
+            <!-- Pas de bouton view-mode pour page ONE -->
+        </div>
+
+        <div id="charts_one" class="charts-grid"></div>
+        <div id="kinematic_one" class="kinematic-card" style="display:none;">
+            <h3 class="kinematic-title">Paramètres cinématiques – <span id="kinematic-plane-title">Sagittal</span></h3>
+            <table class="kinematic-table" id="kinematic-table-one"></table>
+        </div>
+    </div>
+
+    <!-- ONGLET PST -->
+    <div id="tab-pst-one" class="tab-content" style="display:none;">
+
+        <h2 class="pst-title" data-i18n="pst.title">PST — Paramètres spatio-temporels</h2>
+
+        <div class="pst-section">
+            <h3 data-i18n="pst.global_section">Global</h3>
+            <table class="pst-table" id="pst-global-one"></table>
+        </div>
+
+        <div class="pst-columns">
+            <div class="pst-section">
+                <h3 data-i18n="pst.left_title">Côté Gauche</h3>
+                <table class="pst-table" id="pst-left-one"></table>
+            </div>
+
+            <div class="pst-section">
+                <h3 data-i18n="pst.right_title">Côté Droit</h3>
+                <table class="pst-table" id="pst-right-one"></table>
+            </div>
+        </div>
+    </div>
+
+  </div>
+
+
+
+  <!-- ==================================================== -->
+  <!-- 🟠 PAGE COMPARAISON -->
+  <!-- ==================================================== -->
+  <div id="page_compare" class="page">
+
+    <button class="return-btn" id="btn_return_home_compare">
+        <span class="material-icons-outlined">arrow_back</span>
+        <span data-i18n="common.back">Retour</span>
+    </button>
+
+    <h2 class="section-title" data-i18n="compare.title">Comparer deux essais</h2>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:25px;">
+
+        <div class="form-card">
+            <h3 data-i18n="compare.test1">Essai 1</h3>
+
+            <div class="field">
+              <label for="nom1" data-i18n="compare.name1">Nom essai 1</label>
+              <input type="text" id="nom1">
+            </div>
+
+            <div class="field">
+              <label data-i18n="compare.folder1">Dossier essai 1</label>
+              <div class="dossier-container">
+                <input type="text" id="dossier1" class="drop-zone" readonly>
+                <button id="btn-choisir1" data-i18n="common.choose">Choisir</button>
+              </div>
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3 data-i18n="compare.test2">Essai 2</h3>
+
+            <div class="field">
+              <label for="nom2" data-i18n="compare.name2">Nom essai 2</label>
+              <input type="text" id="nom2">
+            </div>
+
+            <div class="field">
+              <label data-i18n="compare.folder2">Dossier essai 2</label>
+              <div class="dossier-container">
+                <input type="text" id="dossier2" class="drop-zone" readonly>
+                <button id="btn-choisir2" data-i18n="common.choose">Choisir</button>
+              </div>
+            </div>
+        </div>
+
+    </div>
+
+    <button id="validate-btn" data-i18n="compare.run">Comparer</button>
+
+    <!-- Onglets -->
+    <div id="tabs-compare" class="tab-bar" style="display:none;">
+        <button class="tab-btn active" data-tab="tab-curves-compare" data-i18n="tabs.curves">Courbes</button>
+        <button class="tab-btn" data-tab="tab-pst-compare" data-i18n="tabs.pst">PST</button>
+    </div>
+
+    <!-- ONGLET COURBES COMPARAISON -->
+    <div id="tab-curves-compare" class="tab-content" style="display:none;">
+
+        <!-- 🔵 Zone commune : Plan + Mode d'affichage -->
+        <div class="plane-view-container">
+            <div class="plane-selector">
+                <span data-i18n="planes.label">Plan :</span>
+
+                <label class="plane-btn">
+                    <input type="radio" name="plane" value="sagittal" checked>
+                    <span data-i18n="planes.sagittal">Plan sagittal</span>
+                </label>
+
+                <label class="plane-btn">
+                    <input type="radio" name="plane" value="frontal">
+                    <span data-i18n="planes.frontal">Plan frontal</span>
+                </label>
+
+                <label class="plane-btn">
+                    <input type="radio" name="plane" value="transverse">
+                    <span data-i18n="planes.transverse">Plan transverse</span>
+                </label>
+            </div>
+
+            <div class="view-mode-inline">
+                <button id="toggle-view" class="toggle-btn" data-i18n="compare.view6">
+                    Vue : 6 graphes
+                </button>
+            </div>
+        </div>
+
+        <!-- GRILLES GRAPHIQUES -->
+        <div id="charts_container" class="charts-grid"></div>
+        
+        <!-- CINÉMATIQUE COMPARAISON — placé sous les courbes -->
+         
+        <div id="tab-kinematic-compare" style="margin-top:30px;">
+            <div class="pst-compare-container">
+
+                <h3 class="pst-subtitle" id="kinematic-compare-title"></h3>
+
+                <div class="delta-info" id="kinematic-compare-delta-info"></div>
+
+                <table class="kinematic-table-compare" id="kinematic-compare-table"></table>
+
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- PST Comparaison -->
+    <div id="tab-pst-compare" class="tab-content" style="display:none;">
+
+        <div class="pst-compare-container">
+
+            <h3 class="pst-subtitle" id="pst-title-global"></h3>
+
+            <table class="pst-table-compare" id="pst-global-table"></table>
+
+            <div class="pst-divider"></div>
+
+            <h3 class="pst-subtitle" id="pst-title-bilat"></h3>
+
+            <div class="delta-info" id="pst-delta-info"></div>
+
+            <table class="pst-table-compare" id="pst-bilat-table"></table>
+
+        </div>
+    </div>
+
+  </div>
+
+
+  <!-- 🔥 LOADING OVERLAY GLOBAL -->
+  <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-box">
+          <div class="loading-title" data-i18n="loading.title">Chargement…</div>
+          <div class="loading-bar">
+              <div class="loading-progress"></div>
+          </div>
+      </div>
+  </div>
+
+  <script src="translations.js"></script>
+  <script src="i18n.js"></script>
+  <script src="pst.js"></script>
+  <script src="charts.js"></script>
+  <script src="renderer.js"></script>
+
+</body>
+</html>

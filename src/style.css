@@ -1,0 +1,983 @@
+/* ---------------------------------------------------------- */
+/* VARIABLES */
+/* ---------------------------------------------------------- */
+:root {
+    --mainwidth: 90%;
+    --OneColor: #C5252C;
+    --OneColorHover: #A61D23;
+
+    --FontOneColor: #000000;
+    --FontTowColor: #8d8d8d;
+    --FontWhiColor: #ffffff;
+
+    --CardColor: #ffffff;
+    --BorderColor: #dcdcdc;
+    --BGColor: #e6e6e6;
+
+    --radius: 1rem;
+    --shadow: 0 4px 14px rgba(0,0,0,0.05);
+
+    font-size: 13px;
+}
+
+.page {
+    width: 100%;
+    max-width: 1600px; /* limite propre si tu veux */
+    margin: 0 auto;
+}
+
+/* ---------------------------------------------------------- */
+/* RESET */
+/* ---------------------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-text-size-adjust: none;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background: var(--BGColor);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--FontOneColor);
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-thumb {
+    background: var(--OneColor);
+    border-radius: 10px;
+}
+
+/* ---------------------------------------------------------- */
+/* HEADER */
+/* ---------------------------------------------------------- */
+.header {
+    width: 100%;
+    height: 80px;
+    background: var(--CardColor);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+}
+
+.header-inner {
+    width: var(--mainwidth);
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+}
+
+.header-logo-img {
+    height: 55px;
+    object-fit: contain;
+}
+
+/* ---------------------------------------------------------- */
+/* PAGE SYSTEM */
+/* ---------------------------------------------------------- */
+.page {
+    display: none;
+    width: var(--mainwidth);
+    margin-top: 40px;
+
+    /* Animations */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.page.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ---------------------------------------------------------- */
+/* HOMEPAGE */
+/* ---------------------------------------------------------- */
+.home-title {
+    font-size: 2rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 30px;
+}
+
+.home-options {
+    margin-top: 40px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+}
+
+.home-card {
+    background: var(--CardColor);
+    border-radius: var(--radius);
+    padding: 40px;
+    border: 1px solid var(--BorderColor);
+    box-shadow: var(--shadow);
+    text-align: center;
+    cursor: pointer;
+    transition: 0.25s ease;
+}
+
+.home-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.10);
+}
+
+.home-card h2 {
+    color: var(--OneColor);
+    margin-bottom: 10px;
+    font-size: 1.6rem;
+}
+
+.home-card p {
+    color: var(--FontTowColor);
+    font-size: 0.95rem;
+}
+
+.card-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 15px;
+    opacity: 0.9;
+}
+
+/* ---------------------------------------------------------- */
+/* FORM STYLES */
+/* ---------------------------------------------------------- */
+.section-title {
+    font-size: 1.7rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.form-card {
+    background: var(--CardColor);
+    border-radius: var(--radius);
+    padding: 25px;
+    border: 1px solid var(--BorderColor);
+    box-shadow: var(--shadow);
+    margin-bottom: 25px;
+}
+
+.field { margin-bottom: 15px; }
+
+.field label {
+    display: block;
+    margin-bottom: 6px;
+    color: var(--FontTowColor);
+    font-size: 0.95rem;
+}
+
+input[type="text"],
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cecece;
+    border-radius: 8px;
+    background: #fafafa;
+    font-size: 0.95rem;
+    transition: 0.2s ease;
+}
+
+input:focus,
+select:focus {
+    border-color: var(--OneColor);
+    background: white;
+}
+
+.dossier-container {
+    display: flex;
+    gap: 10px;
+}
+
+.drop-zone {
+    border: 2px dashed var(--BorderColor);
+    border-radius: 8px;
+    padding: 10px;
+    flex: 1;
+    background: #fafafa;
+    font-size: 0.9rem;
+    transition: 0.2s ease;
+}
+
+.drop-zone:hover {
+    border-color: var(--OneColor);
+}
+
+/* ---------------------------------------------------------- */
+/* BUTTONS */
+/* ---------------------------------------------------------- */
+button {
+    padding: 12px 18px;
+    background: var(--OneColor);
+    color: white;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.95rem;
+    transition: 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+button:hover {
+    background: var(--OneColorHover);
+}
+
+.return-btn {
+    background: #ffffff;
+    color: var(--OneColor);
+    border: 1px solid var(--BorderColor);
+    margin-bottom: 20px;
+}
+
+.return-btn:hover {
+    background: #ffe4e4;
+    border-color: var(--OneColor);
+}
+
+.return-btn .material-icons {
+    font-size: 20px;
+    color: var(--OneColor);
+}
+
+/* ---------------------------------------------------------- */
+/* RESULT BOXES */
+/* ---------------------------------------------------------- */
+#results,
+#results_one {
+    background: var(--CardColor);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    font-size: 0.95rem;
+    white-space: pre-wrap;
+    margin-top: 30px;
+}
+
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);   /* Toujours 2 colonnes */
+  gap: 40px;
+  margin-top: 30px;
+  width: 100%;
+}
+
+@media (max-width: 950px) {
+  .charts-grid {
+    grid-template-columns: 1fr;            /* Passe à 1 colonne si trop petit */
+  }
+}
+
+
+.chart-card {
+  width: 100%;
+}
+
+.chart-card canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 400px; /* tu ajustes si tu veux */
+}
+
+
+.chart-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+
+
+/* ---------------------------------------------------------- */
+/* VIEW MODE BOX — Aligné à droite */
+/* ---------------------------------------------------------- */
+
+.view-mode-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    /* POSITION À DROITE */
+    justify-content: flex-end;
+
+    margin-top: 20px;
+    padding-right: 20px;
+}
+
+.view-mode-box label {
+    font-weight: 600;
+    color: #333;
+}
+
+.toggle-btn {
+    background: var(--OneColor);
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+
+/* ---------------------------------------------------------- */
+/* LOADING OVERLAY + BOX */
+/* ---------------------------------------------------------- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.25); /* léger voile */
+    backdrop-filter: blur(2px);
+    display: none; /* caché au départ */
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+/* Le carré blanc */
+.loading-box {
+    background: white;
+    padding: 25px 35px;
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    text-align: center;
+    min-width: 260px;
+}
+
+/* Texte "Chargement…" */
+.loading-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: #444;
+}
+
+/* La barre elle-même */
+.loading-bar {
+    width: 100%;
+    height: 8px;
+    background: #e9e9e9;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.loading-bar .loading-progress {
+    width: 0%;
+    height: 100%;
+    background: var(--OneColor);
+    animation: loadingAnim 1.6s infinite ease-in-out;
+}
+
+@keyframes loadingAnim {
+    0% { width: 0%; }
+    50% { width: 90%; }
+    100% { width: 20%; }
+}
+
+/* ONGLET BAR */
+.tab-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.tab-btn {
+    padding: 10px 16px;
+    background: #eee;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.tab-btn.active {
+    background: var(--OneColor);
+    color: white;
+    border-color: var(--OneColor);
+}
+
+/* CONTENU ONGLET */
+.tab-content {
+    display: none;
+    margin-top: 20px;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ---------------------------------------------------------- */
+/* PST — VERSION PRO CLINIQUE ULTIME OPTIMISÉE */
+/* ---------------------------------------------------------- */
+
+#tab-pst-one {
+    background: var(--CardColor);
+    padding: 35px;
+    border-radius: 24px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    margin-top: 40px;
+    animation: fadeIn 0.3s ease;
+}
+
+#tab-curves-one {
+    background: var(--CardColor);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.3s ease;
+}
+
+#tab-curves-compare {
+    background: var(--CardColor);
+    padding: 25px;
+    border-radius: 24px;
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.3s ease;
+    margin-top: 30px;
+}
+
+#tab-pst-compare {
+    background: var(--CardColor);
+    padding: 35px;
+    border-radius: 24px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+    margin-top: 40px;
+    animation: fadeIn 0.3s ease;
+}
+
+
+
+.pst-title {
+    margin-bottom: 25px !important;
+}
+
+
+/* Animation douce */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------------------------------------------------------- */
+/* SECTIONS GAUCHE / DROITE */
+/* ---------------------------------------------------------- */
+
+.pst-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px; /* Séparation nette */
+    margin-top: 25px;
+}
+
+.pst-section {
+    background: #ffffff;
+    padding: 28px;
+    border-radius: 18px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.09);
+    border: 1px solid #e9e9e9;
+}
+
+/* ---------------------------------------------------------- */
+/* TITRES SECTIONS */
+/* ---------------------------------------------------------- */
+
+.pst-section h3 {
+    font-size: 1.45rem;
+    font-weight: 700;
+    text-align: center;
+    color: var(--OneColor);
+    margin-bottom: 18px;
+    letter-spacing: 0.5px;
+}
+
+.pst-section h3::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: var(--OneColor);
+    margin: 10px auto 0 auto;
+    border-radius: 4px;
+}
+
+/* ---------------------------------------------------------- */
+/* TABLEAU GLOBAL */
+/* ---------------------------------------------------------- */
+
+#pst-global-one {
+    width: 100%;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+    overflow: hidden;
+    margin-bottom: 35px;
+    text-align: center !important;
+
+}
+
+
+/* ---------------------------------------------------------- */
+/* TABLE STYLE */
+/* ---------------------------------------------------------- */
+
+.pst-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 18px;
+    overflow: hidden;
+    font-size: 1rem;
+}
+
+/* En-têtes */
+.pst-table th {
+    background: #1f3b55;
+    color: white;
+    padding: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    text-align: center;
+}
+
+/* Lignes */
+.pst-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.pst-table td:first-child {
+    font-weight: 600;
+    color: #2d2d2d;
+}
+
+/* Zebra */
+.pst-table tr:nth-child(even) td {
+    background: #f7faff;
+}
+
+/* Hover */
+.pst-table tr:hover td {
+    background: #e6f0ff;
+}
+
+/* ---------------------------------------------------------- */
+/* MEAN ± SD — STYLE CLINIQUE */
+/* ---------------------------------------------------------- */
+
+.value-wrapper {
+    text-align: center;
+    font-weight: 600;
+    color: #1d1d1d;
+    font-size: 1.05rem;
+}
+
+.value-mean {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.value-sd {
+    color: #385170;
+    font-weight: 600;
+    margin-left: 6px;
+    font-size: 0.95rem;
+    opacity: 0.9;
+}
+
+/* ---------------------------------------------------------- */
+/* CONTENEUR                                                  */
+/* ---------------------------------------------------------- */
+
+.pst-compare-container {
+    background: white;
+    padding: 32px;
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+}
+
+/* ---------------------------------------------------------- */
+/* TITRES                                                     */
+/* ---------------------------------------------------------- */
+
+.pst-subtitle {
+    font-size: 1.35rem;
+    color: var(--OneColor);
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+/* ---------------------------------------------------------- */
+/* TABLEAU CLINIQUE                                            */
+/* ---------------------------------------------------------- */
+
+.pst-table-compare {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    background: #fff;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+    table-layout: fixed; /* ⬅ stabilité des colonnes */
+}
+
+.pst-table-compare th {
+    background: #1f3b55;
+    color: white;
+    padding: 12px;
+    font-size: 1rem;
+    text-align: center;          /* ⬅ centre OK */
+    font-weight: 700;
+}
+
+.pst-table-compare td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 0.98rem;
+    font-weight: 500;
+    text-align: center;          /* ⬅ CENTRE PERFECT */
+    vertical-align: middle;      /* ⬅ ALIGNEMENT vertical parfait */
+}
+
+/* La colonne paramètre doit être alignée à gauche */
+.pst-table-compare td.param-label {
+    text-align: left !important;
+    font-weight: 700;
+}
+
+/* Pas de bordure sur dernière ligne */
+.pst-table-compare tr:last-child td {
+    border-bottom: none;
+}
+
+/* Labels côté */
+.pst-left-label {
+    color: #c62828;
+    font-weight: 700;
+}
+
+.pst-right-label {
+    color: #008d3c;
+    font-weight: 700;
+}
+
+/* Δ couleurs */
+.val-better { color: #008d3c; font-weight: 700; }
+.val-worse  { color: #c62828; font-weight: 700; }
+.val-equal  { color: #555;    font-weight: 700; }
+
+/* ---------------------------------------------------------- */
+/* INFO DELTA                                                 */
+/* ---------------------------------------------------------- */
+
+.delta-info {
+    font-size: 0.75rem;
+    color: #555;
+    opacity: 0.8;
+    margin-bottom: 6px;
+    text-align: right;
+}
+
+/* ---------------------------------------------------------- */
+/* SÉPARATEUR                                                 */
+/* ---------------------------------------------------------- */
+
+.pst-divider {
+    height: 2px;
+    background: linear-gradient(to right, transparent, #cfcfcf, transparent);
+    margin: 40px 0 35px 0;
+    border-radius: 2px;
+}
+
+.pst-bold {
+    font-weight: 800;
+}
+
+/* ---------------------------------------------------------- */
+/* SELECTEUR DE PLAN — STYLE HOMOGÉNISÉ NOKOV */
+/* ---------------------------------------------------------- */
+
+.plane-selector {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 25px 0 30px 0;
+    flex-wrap: wrap;
+    padding: 16px 22px;
+
+    background: var(--CardColor);
+    border: 1px solid var(--BorderColor);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+.plane-selector > span {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--FontOneColor);
+}
+
+/* Bouton container */
+.plane-btn {
+    cursor: pointer;
+    user-select: none;
+}
+
+/* On cache l'input natif */
+.plane-btn input[type="radio"] {
+    display: none;
+}
+
+/* Style des boutons "pills" */
+.plane-btn span {
+    background: #f7f7f7;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    border: 1px solid var(--BorderColor);
+    color: var(--FontOneColor);
+
+    transition: all 0.25s ease;
+    display: inline-block;
+}
+
+/* Bouton sélectionné */
+.plane-btn input[type="radio"]:checked + span {
+    background: var(--OneColor);
+    color: white;
+    border-color: var(--OneColor);
+    box-shadow: 0 3px 10px rgba(197, 37, 44, 0.35);
+}
+
+/* Hover */
+.plane-btn span:hover {
+    background: #ececec;
+}
+
+/* Conteneur regroupé : plans + view mode */
+.plane-view-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 25px;
+
+    background: var(--CardColor);
+    border: 1px solid var(--BorderColor);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+
+    padding: 18px 24px;
+    margin: 20px 0 30px 0;
+}
+
+/* Le bouton à droite */
+.view-mode-inline .toggle-btn {
+    padding: 10px 18px;
+    border-radius: 999px;
+}
+
+/* Équilibrage esthétique */
+.plane-selector {
+    margin: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+}
+
+/* ================================================================================= */
+/*  PARAMÈTRES CINÉMATIQUES — STYLE NOKOV                                            */
+/* ================================================================================= */
+
+.kinematic-card {
+    background: var(--CardColor);
+    border-radius: var(--radius);
+    padding: 25px 30px;
+    margin-top: 35px;
+    border: 1px solid var(--BorderColor);
+    box-shadow: var(--shadow);
+    animation: fadeIn 0.3s ease;
+}
+
+.kinematic-title {
+    font-size: 1.45rem;
+    font-weight: 700;
+    color: var(--OneColor);
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.kinematic-title::after {
+    content: "";
+    display: block;
+    width: 60px;
+    height: 4px;
+    background: var(--OneColor);
+    margin: 10px auto 0 auto;
+    border-radius: 4px;
+}
+
+/* ======================== */
+/* TABLEAU INTERNE          */
+/* ======================== */
+
+.kinematic-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 15px;
+    font-size: 0.98rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* EN-TÊTE */
+.kinematic-table th {
+    background: #1f3b55;
+    color: white;
+    padding: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    text-align: center;
+}
+
+/* LIGNES */
+.kinematic-table td {
+    padding: 12px 14px;
+    text-align: center;
+    border-bottom: 1px solid #e6e6e6;
+}
+
+.kinematic-table td:first-child {
+    text-align: left;
+    font-weight: 700;
+    color: #2d2d2d;
+}
+
+/* ZEBRA */
+.kinematic-table tr:nth-child(even) td {
+    background: #f9fbff;
+}
+
+/* HOVER */
+.kinematic-table tr:hover td {
+    background: #edf4ff;
+}
+
+/* STYLE CLINIQUE pour valeur ± SD */
+.kin-value {
+    font-weight: 600;
+    color: #1d1d1d;
+}
+
+.kin-sd {
+    font-size: 0.9rem;
+    color: #385170;
+    margin-left: 4px;
+    opacity: 0.9;
+}
+
+/* ========================================================================= */
+/* KINEMATIC — TABLEAU DE COMPARAISON                                       */
+/* ========================================================================= */
+
+.kinematic-table-compare {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    margin-top: 18px;
+    font-size: 0.95rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* EN-TÊTE */
+.kinematic-table-compare th {
+    background: #1f3b55;
+    color: white;
+    padding: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+/* CELLULES */
+.kinematic-table-compare td {
+    padding: 10px 12px;
+    text-align: center;
+    border-bottom: 1px solid #e3e9ef;
+}
+
+/* Première colonne : nom du paramètre */
+.kinematic-table-compare td.kin-row-title {
+    text-align: left;
+    font-weight: 700;
+    color: #2d2d2d;
+    width: 220px;
+}
+
+/* ZEBRA */
+.kinematic-table-compare tr:nth-child(even) td {
+    background: #f9fbff;
+}
+
+/* HOVER */
+.kinematic-table-compare tr:hover td {
+    background: #edf4ff;
+}
+
+/* STYLE valeurs ± SD */
+.kinematic-table-compare .kin-value {
+    font-weight: 600;
+    color: #1d1d1d;
+}
+
+.kinematic-table-compare .kin-sd {
+    font-size: 0.9rem;
+    color: #385170;
+    opacity: 0.85;
+}
+
+/* DELTA (Δ) couleurs, cohérent PST compare) */
+.val-better {
+    font-weight: 700;
+    color: #1b8a3f; /* vert */
+}
+
+.val-worse {
+    font-weight: 700;
+    color: #c62828; /* rouge */
+}
+
+.val-equal {
+    font-weight: 700;
+    color: #4a4a4a;
+}
+
+/* Option : valeur mise en avant */
+.kinematic-highlight {
+    font-weight: 800;
+
+}
