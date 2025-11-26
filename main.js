@@ -282,7 +282,7 @@ function getPythonScriptPath() {
 
 function getPythonExecutable() {
   // Si tu veux embarquer python.exe : on modifie ici
-  return "python"; // Pour le moment : utilise Python installé sur le PC
+  return process.platform ==="darwin" ? "python3" : "python";
 }
 
 ipcMain.handle("run-python", async (_, args) => {
