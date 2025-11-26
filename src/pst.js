@@ -52,6 +52,19 @@
     "Double support (% GC)": "pst.double_support",
   };
 
+  // Permet de mapper les labels réels aux clés de normes globales
+  const PST_GLOBAL_MAP = {
+    "Distance (m)": null,
+    "Duration (s)": null,
+    "Speed (m/s)": "speed",
+    "Cadence (step/min)": "cadence",
+    "Walk Ratio": "walk_ratio",
+    "Walk_ratio": "walk_ratio",
+    "walk_ratio": "walk_ratio"
+  };
+
+
+
 
   // ============================================================
   // RADAR PST — Normalisation EXACT Python style 🧠
@@ -69,6 +82,13 @@
     { id: "Stance_phase",   normKey: "stance_phase",   keyL: "Stance_phase_L",   keyR: "Stance_phase_R" },
     { id: "double_support", normKey: "double_support", keyL: "double_support_L", keyR: "double_support_R" }
   ];
+
+  const PST_GLOBAL_NORMS = {
+    speed:       { min: 1.11, max: 1.39 },  // 4–5 km/h convertis en m/s
+    cadence:     { min: 100,  max: 120  },  // step/min
+    walk_ratio:  { min: 0.52, max: 0.64 }   // 0.58 ± 0.06
+  };
+
 
 
 
@@ -343,10 +363,52 @@
 
   const PST_ORDER_R = PST_ORDER.map(k => k.replace("_L", "_R"));
 
+  function getNormRange(key) {
+    const base = key.replace("_L", "").replace("_R", "").toLowerCase();
+    return PST_RADAR_NORMS[base] || { min: 0, max: 1 };
+  }
+
+  function createMiniGraph(value, key, isGlobal = false) {
+    const { min, max } = isGlobal ? PST_GLOBAL_NORMS[key] : getNormRange(key);
+    if (!isFinite(value)) return "";
+
+    const isLeft = key.includes("_L");
+    const cursorColor = isGlobal ? "#000" : (isLeft ? "#c4242c" : "rgb(0,150,0)");
+
+    const isOutOfNorm = (value < min || value > max);
+
+    const amplitude = max - min;
+    const margin = amplitude * 0.25;
+
+    const rangeMin = Math.min(min - margin, value - margin);
+    const rangeMax = Math.max(max + margin, value + margin);
+
+    const normStart = ((min - rangeMin) / (rangeMax - rangeMin)) * 100;
+    const normWidth = (amplitude / (rangeMax - rangeMin)) * 100;
+    const pos = ((value - rangeMin) / (rangeMax - rangeMin)) * 100;
+
+    return `
+      <div class="pst-graph-wrapper ${isOutOfNorm ? "out-of-norm" : ""}">
+        <div class="pst-value-text">${value.toFixed(2)}</div>
+        <div class="pst-mini-graph">
+          <div class="pst-bar-bg"></div>
+          <div class="pst-norm-bar"
+              style="left:${normStart}%; width:${normWidth}%;"></div>
+          <div class="pst-value-marker"
+              style="left:${pos}%; background:${cursorColor};"></div>
+        </div>
+        <div class="pst-norm-text">
+          <span>${min.toFixed(2)}</span>
+          <span>${max.toFixed(2)}</span>
+        </div>
+      </div>
+    `;
+  }
+
 
 
   // ============================================================
-  // 4) TABLE 1 ESSAI (LEFT + RIGHT)
+  // 4) TABLEAU BILAT (100% traduit + mini-graph Norme)
   // ============================================================
   function fillPSTTable(id, data) {
     const isLeft = id.includes("left");
@@ -356,6 +418,7 @@
       <tr>
         <th>${PST_HEADERS.header_param}</th>
         <th>${PST_HEADERS.header_mean_sd}</th>
+        <th>${t("pst.norm")}</th>
       </tr>
     `;
 
@@ -365,25 +428,23 @@
       const [mean, sd] = data[key];
 
       const baseKey = key.replace("_L", "").replace("_R", "");
-      const i18nKey = PST_LABEL_KEYS[baseKey] || baseKey;
-
-      const label = t(i18nKey);
+      const label = t(PST_LABEL_KEYS[baseKey] || baseKey);
 
       html += `
         <tr>
           <td><strong>${label}</strong></td>
-          <td class="value-wrapper">
+          <td>
             <span class="value-mean">${mean.toFixed(2)}</span>
             <span>±</span>
             <span class="value-sd">${sd.toFixed(2)}</span>
           </td>
+          <td>${createMiniGraph(mean, key)}</td>
         </tr>
       `;
     }
 
     document.getElementById(id).innerHTML = html;
   }
-
 
 
   // ============================================================
@@ -397,6 +458,7 @@
       <tr>
         <th>${PST_HEADERS.header_param}</th>
         <th>${PST_HEADERS.header_value}</th>
+        <th>${t("pst.norm")}</th>
       </tr>
     `;
 
@@ -404,10 +466,17 @@
       const i18nKey = PST_LABEL_KEYS[key] || key;
       const label   = t(i18nKey);
 
+      const normKey = PST_GLOBAL_MAP[key];
+      const miniGraph =
+        normKey && PST_GLOBAL_NORMS[normKey]
+          ? createMiniGraph(g[key], normKey, true)
+          : "";
+
       globalHtml += `
         <tr>
           <td><strong>${label}</strong></td>
-          <td>${g[key]}</td>
+          <td><span class="value-mean">${g[key].toFixed(2)}</span></td>
+          <td>${miniGraph}</td>
         </tr>
       `;
     }
@@ -417,9 +486,7 @@
     fillPSTTable("pst-left-one",  result.PST_L);
     fillPSTTable("pst-right-one", result.PST_R);
 
-    // 🔥 Radar spatio-temporel
     pstRadar_render(result);
-
   }
 
 
@@ -454,49 +521,67 @@
         : v.toFixed(2);
 
 
-    // -----------------------------------------------------------
-    // TABLEAU GLOBAL
-    // -----------------------------------------------------------
-    const GLOBAL_PARAMS = [
-      ["Distance (m)", "Distance (m)"],
-      ["Duration (s)", "Duration (s)"],
-      ["Speed (m/s)", "Speed (m/s)"],
-      ["Cadence (step/min)", "Cadence (step/min)"],
-      ["Walk Ratio", "Walk_ratio"]
-    ];
+  // -----------------------------------------------------------
+  // TABLEAU GLOBAL (Norme dans une seule colonne, 2 graphiques)
+  // -----------------------------------------------------------
+  const GLOBAL_PARAMS = [
+    ["Distance (m)", "Distance (m)"],
+    ["Duration (s)", "Duration (s)"],
+    ["Speed (m/s)", "Speed (m/s)"],
+    ["Cadence (step/min)", "Cadence (step/min)"],
+    ["Walk Ratio", "Walk_ratio"]
+  ];
 
-    let g = `
+  let g = `
+    <tr>
+      <th>${t("pst.header_param")}</th>
+      <th>${name1}</th>
+      <th>${name2}</th>
+      <th>${t("pst.norm")}</th>
+      <th>Δ = ${name2} − ${name1}</th>
+    </tr>
+  `;
+
+  GLOBAL_PARAMS.forEach(([label, key]) => {
+    const v1 = py1.PST_global[key];
+    const v2 = py2.PST_global[key];
+
+    const i18nKey = PST_LABEL_KEYS[label] || label;
+    const labelText = t(i18nKey);
+
+    const normKey = PST_GLOBAL_MAP[label];
+
+    const mini1 = normKey ? createMiniGraph(v1, normKey, true) : "";
+    const mini2 = normKey ? createMiniGraph(v2, normKey, true) : "";
+
+    const v1Html = v1 >= v2
+      ? `<strong>${v1.toFixed(2)}</strong>`
+      : v1.toFixed(2);
+
+    const v2Html = v2 >= v1
+      ? `<strong>${v2.toFixed(2)}</strong>`
+      : v2.toFixed(2);
+
+    g += `
       <tr>
-        <th>${t("pst.header_param")}</th>
-        <th>${name1}</th>
-        <th>${name2}</th>
-        <th>Δ = ${name2} − ${name1}</th>
+        <td><strong>${labelText}</strong></td>
+        <td>${v1Html}</td>
+        <td>${v2Html}</td>
+        <td class="pst-norm-col">
+          <div class="pst-compare-norm">
+            ${mini1}
+            ${mini2}
+          </div>
+        </td>
+        <td>${deltaCell(v1, v2)}</td>
       </tr>
     `;
+  });
 
-    GLOBAL_PARAMS.forEach(([label, key]) => {
-      const v1 = py1.PST_global[key];
-      const v2 = py2.PST_global[key];
-
-      const i18nKey = PST_LABEL_KEYS[label] || label;
-      const labelText = t(i18nKey);
-
-      g += `
-        <tr>
-          <td><strong>${labelText}</strong></td>
-          <td>${boldIfHigher(v1, v2)}</td>
-          <td>${boldIfHigher(v2, v1)}</td>
-          <td>${deltaCell(v1, v2)}</td>
-        </tr>
-      `;
-    });
-
-    document.getElementById("pst-global-table").innerHTML = g;
-
-
+  document.getElementById("pst-global-table").innerHTML = g;
 
     // -----------------------------------------------------------
-    // TABLEAU BILATÉRAL
+    // TABLEAU BILATÉRAL — 2 mini-graphes par ligne (Tommy+Alex)
     // -----------------------------------------------------------
     const BILAT_PARAMS = [
       ["Stride length (mm)",  "stride_length_L",  "stride_length_R"],
@@ -512,9 +597,10 @@
     let b = `
       <tr>
         <th>${t("pst.header_param")}</th>
-        <th>${t("pst.header_value")}</th>
+        <th></th>
         <th>${name1}</th>
         <th>${name2}</th>
+        <th>${t("pst.norm")}</th>
         <th>Δ</th>
       </tr>
     `;
@@ -526,8 +612,13 @@
       const R1 = py1.PST_R[keyR][0];
       const R2 = py2.PST_R[keyR][0];
 
-      const i18nKey  = PST_LABEL_KEYS[label] || label;
-      const labelText = t(i18nKey);
+      const labelText = t(PST_LABEL_KEYS[label] || label);
+
+      const miniTom_L = createMiniGraph(L1, keyL);
+      const miniAlex_L = createMiniGraph(L2, keyL);
+
+      const miniTom_R = createMiniGraph(R1, keyR);
+      const miniAlex_R = createMiniGraph(R2, keyR);
 
       b += `
         <tr>
@@ -535,6 +626,12 @@
           <td class="pst-left-label">${t("pst.left")}</td>
           <td>${boldIfHigher(L1, L2)}</td>
           <td>${boldIfHigher(L2, L1)}</td>
+          <td>
+            <div class="pst-compare-norm">
+              ${miniTom_L}
+              ${miniAlex_L}
+            </div>
+          </td>
           <td>${deltaCell(L1, L2)}</td>
         </tr>
 
@@ -542,12 +639,19 @@
           <td class="pst-right-label">${t("pst.right")}</td>
           <td>${boldIfHigher(R1, R2)}</td>
           <td>${boldIfHigher(R2, R1)}</td>
+          <td>
+            <div class="pst-compare-norm">
+              ${miniTom_R}
+              ${miniAlex_R}
+            </div>
+          </td>
           <td>${deltaCell(R1, R2)}</td>
         </tr>
       `;
     });
 
     document.getElementById("pst-bilat-table").innerHTML = b;
+
     pstRadar_compare(py1, py2, name1, name2);
 
   }
