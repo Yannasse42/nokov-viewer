@@ -1,4 +1,4 @@
- # 🦵 Nokov Viewer
+# 🦵 Nokov Viewer
 
 **Logiciel d’analyse de marche 3D — compatible markerless Nokov**
 
@@ -54,3 +54,57 @@ Puis lancer :
 ```sh
 npm install
 npm start
+📦 Build d’une release installable
+sh
+Copier le code
+npm run dist
+➡ Génère un installeur Windows dans dist/
+
+🗺 Roadmap
+ Export PDF du rapport d’analyse
+
+ Intégration modèle biomécanique personnalisé
+
+ Vue 3D + relecture animée du cycle de marche
+
+ Support macOS / Linux
+
+ Tracking qualité signal + détection événements
+
+👨‍💻 Technologies
+Domaine	Outils
+UI / Desktop	Electron 38
+Visualisation	Chart.js (+ Zoom Plugin)
+Analyse	Python + Pandas + Numpy
+
+👤 Auteur
+Yann Villard — Analyse du mouvement & développement
+📧 (à compléter si tu veux)
+
+📜 Licence
+ISC — voir LICENSE
+
+🚀 Release Notes
+v1.1.0 (2025-01-xx)
+➕ Ajout des courbes normatives avec bande ±1 SD
+
+🧠 Lecture automatique du static si présent dans le dossier
+
+🎯 Refactorisation complète de l’affichage des graphes
+
+💄 UI : titres uniformisés, rendu plus propre
+
+yaml
+Copier le code
+
+---
+
+## 🏷 Commandes Git pour créer le tag
+
+Si le repo est déjà configuré :
+
+```sh
+git add .
+git commit -m "v1.1.0 — Normative bands + rendering refactor"
+git tag v1.1.0
+git push && git push --tags
