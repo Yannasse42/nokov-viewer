@@ -1128,5 +1128,264 @@ canvas#pst-radar-canvas {
   justify-content: center;
   align-items: center;
 }
+/* ==/* =========================================================
+   🎯 HELP BUTTON — Style cohérent avec l’UI Nokov Viewer
+   ========================================================= */
+.help-btn {
+  padding: 6px;
+  margin-left: 8px;
+  background: #ffffff;
+  border: 1px solid var(--BorderColor);
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: var(--OneColor);
+  opacity: 0.85;
+  transition: 0.22s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.help-btn:hover {
+  opacity: 1;
+  background: #f7f7f7;
+  border-color: var(--OneColorHover);
+}
+
+.help-btn .material-icons-outlined {
+  font-size: 18px;
+}
 
 
+/* =========================================================
+   🪟 HELP MODAL — Pop-up d’aide
+   ========================================================= */
+.help-modal.hidden { display: none !important; }
+
+.help-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.help-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.42);
+}
+
+.help-box {
+  position: relative;
+  width: 92%;
+  max-width: 550px;
+  max-height: 82vh;
+  display: flex;
+  flex-direction: column;
+
+  padding: 1.8rem 1.6rem;
+  background: var(--CardColor);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeUp 0.25s ease;
+  overflow: hidden;
+}
+
+/* Header */
+.help-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.15rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--BorderColor);
+  padding-bottom: 10px;
+}
+
+.help-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--FontOneColor);
+  opacity: 0.6;
+  transition: 0.2s ease;
+}
+
+.help-close:hover {
+  opacity: 1;
+}
+
+/* Corps */
+.help-body {
+  font-size: .95rem;
+  line-height: 1.55;
+  color: var(--FontOneColor);
+  overflow-y: auto;
+  padding: 12px 4px;
+}
+
+/* Footer */
+.help-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.help-footer .btn.primary {
+  background: var(--OneColor);
+  color: #fff;
+  padding: .5rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.help-footer .btn.primary:hover {
+  background: var(--OneColorHover);
+}
+
+/* Animation */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* =========================================================
+   📌 Alignement titres + boutons d’aide
+   ========================================================= */
+.page-header,
+.tab-header,
+.kinematic-header,
+.pst-radar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.page-header h2,
+.tab-header span,
+.kinematic-header h3 {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  font-weight: 600;
+}
+
+.page-header,
+.tab-header,
+.kinematic-header {
+  margin-bottom: 15px;
+}
+
+
+/* === Spécifique à la page comparaison === */
+#page_compare .kinematic-header {
+  margin-top: 35px;
+  border-top: 1px solid var(--BorderColor);
+  padding-top: 15px;
+}
+
+
+/* =========================================================
+   📘 Mise en forme du contenu interne HTML d’aide
+   ========================================================= */
+.help-body h3, 
+.help-body h4 {
+  font-size: 1.05rem;
+  margin-bottom: 8px;
+  color: var(--OneColorHover);
+}
+
+.help-body p {
+  margin-bottom: 8px;
+}
+
+.help-list,
+.help-steps {
+  padding-left: 18px;
+  margin: 6px 0 10px;
+}
+
+.help-list { list-style: disc; }
+.help-steps { list-style: decimal; }
+
+.help-formula {
+  background: #fff9d9;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #eedc95;
+  text-align: center;
+  font-weight: 600;
+  margin: 6px 0;
+}
+
+.help-note {
+  background: #eef3ff;
+  border-left: 4px solid var(--OneColor);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-size: .9rem;
+  margin-top: 10px;
+}
+
+
+/* Couleurs jambe gauche/droite */
+.left-color,
+.right-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.left-color {
+  background: #ff4d4d; /* Rouge */
+}
+
+.right-color {
+  background: #2eb82e; /* Vert */
+}
+
+.help-intro {
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.help-tip {
+    font-size: 0.85rem;
+    opacity: 0.85;
+}
+
+
+#page_home .page-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    margin-bottom: 25px;
+    text-align: center;
+}
+
+#page_home .section-title {
+    font-size: 32px;
+    font-weight: 700;
+    color: #222;
+}
+
+#page_home .section-subtitle {
+    font-size: 18px;
+    font-weight: 400;
+    color: #555;
+}
+
+#page_home .help-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+}

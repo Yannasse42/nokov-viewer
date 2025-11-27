@@ -17,7 +17,7 @@
 // 1) ÉTAT GLOBAL UI
 // ============================================================================
 const UIState = {
-    currentPage: "home",
+    currentPage: "page_home",
     currentTab: null,
     currentPlane_one: "sagittal",
     currentPlane_compare: "sagittal",
@@ -153,7 +153,7 @@ const UIManager = {
     // Appliquer automatiquement le bon plan dans l’UI + Charts
     // ------------------------------------------------------------
     selectDefaultPlane() {
-        const page = UIState.currentPage;
+        const page = UIState.currentPage || "page_home";
 
         // Plane mémorisé selon la page
         const plane = (page === "page_one")
@@ -203,6 +203,58 @@ function setupDropZone(inputElement) {
 // 4) DOMContentLoaded — Initialisation principale
 // ============================================================================
 window.addEventListener("DOMContentLoaded", () => {
+
+    // ======================================================================
+    // HELP MANAGER — aide contextuelle
+    // ======================================================================
+    const HelpManager = (() => {
+        const modal = document.getElementById("help-modal");
+        const body  = document.getElementById("help-body");
+        const title = document.getElementById("help-title");
+        const btnClose = document.getElementById("help-close");
+        const btnOk    = document.getElementById("help-ok");
+
+        const map = {
+            home:      () => ({ title: "Nokov Viewer", text: t("help.home_intro") }),
+            one:       () => ({ title: t("single.title"), text: t("help.one_intro") }),
+            compare:   () => ({ title: t("compare.title"), text: t("help.compare_intro") }),
+            curves:    () => ({ title: t("tabs.curves"), text: t("help.curves_intro") }),
+            pst:       () => ({ title: t("tabs.pst"), text: t("help.pst_intro") }),
+            pst_radar: () => ({ title: t("pst.radar_title"), text: t("help.pst_radar_intro") }),
+            curves:    () => ({ title: t("tabs.curves"), text: t("help.curves_intro") }),
+            kinematic: () => ({ title: t("kinematic.title_short"), text: t("help.kinematic_intro") }),
+        };
+
+        function open(id) {
+            const data = map[id]();
+            title.textContent = data.title;
+            body.innerHTML = data.text;
+            modal.classList.remove("hidden");
+        }
+
+        function close() {
+            modal.classList.add("hidden");
+        }
+
+        function init() {
+            document.querySelectorAll(".help-btn").forEach(btn => {
+                btn.addEventListener("click", () => open(btn.dataset.helpId));
+            });
+            btnClose.addEventListener("click", close);
+            btnOk.addEventListener("click", close);
+            modal.addEventListener("click", e => {
+                if (e.target === modal || e.target.classList.contains("help-backdrop"))
+                    close();
+            });
+            window.addEventListener("keydown", e => {
+                if (e.key === "Escape") close();
+            });
+        }
+
+        return { init };
+    })();
+    HelpManager.init();
+
 
     // ------------------ Langue --------------------------------
     const savedLang = localStorage.getItem("language") || "fr";

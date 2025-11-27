@@ -27,38 +27,56 @@
   <!-- ==================================================== -->
   <!-- 🏠 PAGE D'ACCUEIL -->
   <!-- ==================================================== -->
-  <div id="page_home" class="page active">
+    <!-- 🏠 PAGE D'ACCUEIL -->
+    <div id="page_home" class="page active">
 
-    <h1 class="home-title" data-i18n="home.welcome">Bienvenue</h1>
+    <div class="page-header">
+        <div class="home-title">
+            <h2 class="section-title" data-i18n="home.welcome_title">Bienvenue</h2>
+            <p class="section-subtitle" data-i18n="home.welcome_subtitle">
+                Choisissez un mode d’analyse
+            </p>
+        </div>
+
+        <button class="help-btn" data-help-id="home">
+            <span class="material-icons-outlined">help_outline</span>
+        </button>
+    </div>
+
+
 
     <div class="home-options">
 
-      <div class="home-card" id="go_one">
+        <div class="home-card" id="go_one">
         <h2 data-i18n="home.single.title">Analyse d’un essai</h2>
         <p data-i18n="home.single.desc">Importer et analyser une seule marche.</p>
-      </div>
+        </div>
 
-      <div class="home-card" id="go_compare">
+        <div class="home-card" id="go_compare">
         <h2 data-i18n="home.compare.title">Comparer deux essais</h2>
         <p data-i18n="home.compare.desc">Comparer deux sessions de marche.</p>
-      </div>
+        </div>
 
     </div>
 
-  </div>
+    </div>
 
 
-  <!-- ==================================================== -->
-  <!-- 🔵 PAGE ANALYSE 1 ESSAI -->
-  <!-- ==================================================== -->
-  <div id="page_one" class="page">
+
+    <!-- 🔵 PAGE ANALYSE 1 ESSAI -->
+    <div id="page_one" class="page">
 
     <button class="return-btn" id="btn_return_home_one">
         <span class="material-icons-outlined">arrow_back</span>
         <span data-i18n="common.back">Retour</span>
     </button>
 
-    <h2 class="section-title" data-i18n="single.title">Analyse d’un essai</h2>
+    <div class="page-header">
+        <h2 class="section-title" data-i18n="single.title">Analyse d’un essai</h2>
+        <button class="help-btn" data-help-id="one">
+        <span class="material-icons-outlined">help_outline</span>
+        </button>
+    </div>
 
     <div class="form-card">
 
@@ -88,6 +106,14 @@
     <!-- ONGLET COURBES -->
     <div id="tab-curves-one" class="tab-content active" style="display:none;">
 
+        <div class="tab-header">
+            <span data-i18n="tabs.curves">Courbes</span>
+            <button class="help-btn" data-help-id="curves">
+            <span class="material-icons-outlined">help_outline</span>
+            </button>
+        </div>
+
+
         <!-- 🔵 Zone commune : Plan (même structure que compare) -->
         <div class="plane-view-container">
 
@@ -115,13 +141,30 @@
 
         <div id="charts_one" class="charts-grid"></div>
         <div id="kinematic_one" class="kinematic-card" style="display:none;">
-            <h3 class="kinematic-title">Paramètres cinématiques – <span id="kinematic-plane-title">Sagittal</span></h3>
+            
+            <div class="kinematic-header">
+                <h3 class="kinematic-title">
+                    Paramètres cinématiques – <span id="kinematic-plane-title">Sagittal</span>
+                </h3>
+                <button class="help-btn" data-help-id="kinematic">
+                    <span class="material-icons-outlined">help_outline</span>
+                </button>
+            </div>
+
             <table class="kinematic-table" id="kinematic-table-one"></table>
         </div>
     </div>
 
     <!-- ONGLET PST -->
     <div id="tab-pst-one" class="tab-content" style="display:none;">
+
+        <div class="tab-header">
+            <span data-i18n="tabs.pst">PST</span>
+            <button class="help-btn" data-help-id="pst">
+            <span class="material-icons-outlined">help_outline</span>
+            </button>
+        </div>
+
 
         <h2 class="pst-title" data-i18n="pst.title">PST — Paramètres spatio-temporels</h2>
 
@@ -143,17 +186,19 @@
         </div>
 
         <div class="pst-section pst-radar-section">
-            <h3 data-i18n="pst.radar_title">Profil spatio-temporel (radar)</h3>
+            <div class="pst-radar-header">
+                <h3 data-i18n="pst.radar_title">Profil spatio-temporel (radar)</h3>
+                <button class="help-btn" data-help-id="pst_radar">
+                    <span class="material-icons-outlined">help_outline</span>
+                </button>
+            </div>
             <div class="pst-radar-wrapper">
                 <canvas id="pst-radar-canvas-one"></canvas>
             </div>
         </div>
-
     </div>
 
   </div>
-
-
 
   <!-- ==================================================== -->
   <!-- 🟠 PAGE COMPARAISON -->
@@ -164,8 +209,13 @@
         <span class="material-icons-outlined">arrow_back</span>
         <span data-i18n="common.back">Retour</span>
     </button>
-
-    <h2 class="section-title" data-i18n="compare.title">Comparer deux essais</h2>
+    <!-- 🔥 HEADER UNIFIÉ comme page ONE -->
+    <div class="page-header">
+        <h2 class="section-title" data-i18n="compare.title">Comparer deux essais</h2>
+        <button class="help-btn" data-help-id="compare">
+            <span class="material-icons-outlined">help_outline</span>
+        </button>
+    </div>
 
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:25px;">
 
@@ -216,6 +266,14 @@
     <!-- ONGLET COURBES COMPARAISON -->
     <div id="tab-curves-compare" class="tab-content" style="display:none;">
 
+        <!-- Header de l’onglet Courbes -->
+        <div class="tab-header">
+            <span data-i18n="tabs.curves">Courbes</span>
+            <button class="help-btn" data-help-id="curves">
+                <span class="material-icons-outlined">help_outline</span>
+            </button>
+        </div>
+
         <!-- 🔵 Zone commune : Plan + Mode d'affichage -->
         <div class="plane-view-container">
             <div class="plane-selector">
@@ -248,11 +306,18 @@
         <div id="charts_container" class="charts-grid"></div>
         
         <!-- CINÉMATIQUE COMPARAISON — placé sous les courbes -->
-         
+        <div class="kinematic-header">
+            <h3 id="kinematic-compare-title"></h3>
+            <button class="help-btn" data-help-id="kinematic">
+                <span class="material-icons-outlined">help_outline</span>
+            </button>
+        </div>
+
         <div id="tab-kinematic-compare" style="margin-top:30px;">
             <div class="pst-compare-container">
 
-                <h3 class="pst-subtitle" id="kinematic-compare-title"></h3>
+                <!-- ⚠️ ici on enlève l’ID en double -->
+                <h3 class="pst-subtitle" id="kinematic-compare-subtitle"></h3>
 
                 <div class="delta-info" id="kinematic-compare-delta-info"></div>
 
@@ -261,11 +326,18 @@
             </div>
         </div>
 
-
     </div>
 
     <!-- PST Comparaison -->
     <div id="tab-pst-compare" class="tab-content" style="display:none;">
+
+        <!-- Header de l’onglet PST -->
+        <div class="tab-header">
+            <span data-i18n="tabs.pst">PST</span>
+            <button class="help-btn" data-help-id="pst">
+                <span class="material-icons-outlined">help_outline</span>
+            </button>
+        </div>
 
         <div class="pst-compare-container">
 
@@ -283,14 +355,19 @@
 
             <!-- 🟡 Radar Comparatif -->
             <div class="pst-radar-section">
-                <h3 data-i18n="pst.radar_title">Profil spatio-temporel – Comparaison</h3>
+                <div class="pst-radar-header">
+                    <h3 data-i18n="pst.radar_title">Profil spatio-temporel – Comparaison</h3>
+                    <button class="help-btn" data-help-id="pst_radar">
+                        <span class="material-icons-outlined">help_outline</span>
+                    </button>
+                </div>
                 <div class="pst-radar-wrapper">
                     <canvas id="pst-radar-canvas-compare"></canvas>
                 </div>
             </div>
-
         </div>
     </div>
+
   </div>
 
 
@@ -303,6 +380,22 @@
           </div>
       </div>
   </div>
+
+    <!-- ===================== HELP MODAL ===================== -->
+   <div id="help-modal" class="help-modal hidden">
+     <div class="help-backdrop"></div>
+     <div class="help-box">
+     <div class="help-header">
+        <span id="help-title">Aide</span>
+       <button id="help-close" class="help-close">✕</button>
+     </div>
+     <div id="help-body" class="help-body"></div>
+     <div class="help-footer">
+       <button id="help-ok" class="btn primary">OK</button>
+     </div>
+    </div>
+   </div>
+
 
   <script src="translations.js"></script>
   <script src="i18n.js"></script>
