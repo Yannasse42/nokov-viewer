@@ -200,20 +200,31 @@ body {
 </div>
 
 <script>
-/* Version dynamique */
-window.electronAPI?.getAppVersion?.().then(v => {
-    document.getElementById("appVersion").textContent = "Version " + v;
-});
+console.log("[ABOUT] Script chargé");
 
-/* Logo : ton image Nokov */
+// Logo
 document.getElementById("appIcon").src = "src/images/about.jpg";
 
-/* Ouvrir email support */
-document.getElementById("supportBtn").addEventListener("click", () => {
-    window.electronAPI.openExternal(
-        "mailto:info@biometrics.fr?subject=Support%20Nokov%20Viewer"
-    );
-});
+const supportBtn = document.getElementById("supportBtn");
+
+if (supportBtn) {
+    supportBtn.addEventListener("click", () => {
+        const mailto = "mailto:info@biometrics.fr?subject=Support%20Nokov%20Viewer";
+
+        console.log("[ABOUT] Support click");
+        console.log("[ABOUT] electronAPI =", window.electronAPI);
+
+        // Si l’API Electron est dispo → on utilise shell.openExternal
+        if (window.electronAPI && typeof window.electronAPI.openExternal === "function") {
+            window.electronAPI.openExternal(mailto);
+        } else {
+            // Fallback navigateur classique
+            window.location.href = mailto;
+        }
+    });
+} else {
+    console.error("[ABOUT] Bouton support introuvable");
+}
 </script>
 </body>
 </html>

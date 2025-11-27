@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require("electron");
+const { contextBridge, ipcRenderer, shell } = require("electron");
 const path = require("path");
 
 contextBridge.exposeInMainWorld("electronAPI", {
@@ -9,14 +9,13 @@ contextBridge.exposeInMainWorld("electronAPI", {
     readHTR: (p) => ipcRenderer.invoke("read-htr", p),
     readTRC: (p) => ipcRenderer.invoke("read-trc", p),
 
-    // 🔥 ajout
     runPython: (args) => ipcRenderer.invoke("run-python", args),
 
     folderExists: (path) => ipcRenderer.invoke("folder-exists", path),
 
     onSetLanguage: (callback) => ipcRenderer.on("set-language", callback),
-
     setMenuLanguage: (lang) => ipcRenderer.send("update-menu-language", lang),
 
+    // 👇 FIX : maintenant shell est correctement importé
+    openExternal: (url) => shell.openExternal(url)
 });
-

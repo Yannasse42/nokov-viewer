@@ -147,12 +147,14 @@ function openAboutWindow() {
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      sandbox: false   // ← tu peux ajouter ça pour être cohérent avec la main window
     }
   });
 
   aboutWin.loadFile(path.join(__dirname, "about.html"));
 }
+
 // ============================================================================
 // 4) CRÉATION DE LA FENÊTRE
 // ============================================================================
