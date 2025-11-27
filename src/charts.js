@@ -1,102 +1,158 @@
 // src/charts.js
 (function (global) {
-  // ===========================
-  //  State interne
-  // ===========================
-  let currentPlane = "sagittal"; // sagittal / frontal / transverse
-  let viewMode = "compact";      // compact = 6 graphes, detailed = 12 graphes
 
+  // ==============================================================
+  //  🔹 État interne des options d’affichage
+  // ==============================================================
+
+  let currentPlane = "sagittal";  // Plan visualisé : sagittal, frontal, transverse
+  let viewMode = "compact";       // compact = 6 graphes / detailed = 12 graphes
+
+  // Contiendra les données Python
   let pyLeft = null;
   let pyRight = null;
+
+  // Étiquettes affichées dans les légendes
   let labelLeft = "Essai 1";
   let labelRight = "Essai 2";
 
-  // ===========================
-  //  Couleurs
-  // ===========================
-  const COLORS = {
-    red1: "rgba(180, 0, 0, 1)",
-    red1_fill: "rgba(180, 0, 0, 0.25)",
-    red2: "rgba(255, 80, 80, 1)",
-    red2_fill: "rgba(255, 80, 80, 0.25)",
+  // ==============================================================
+  //  🔹 Palette couleur utilisée pour tracer les courbes
+  // ==============================================================
 
-    green1: "rgba(0, 140, 0, 1)",
-    green1_fill: "rgba(0, 140, 0, 0.25)",
-    green2: "rgba(120, 220, 120, 1)",
-    green2_fill: "rgba(120, 220, 120, 0.25)"
+  const COLORS = {
+    red1: "rgba(180, 0, 0, 1)", red1_fill: "rgba(180, 0, 0, 0.25)",
+    red2: "rgba(255, 80, 80, 1)", red2_fill: "rgba(255, 80, 80, 0.25)",
+    green1: "rgba(0, 140, 0, 1)", green1_fill: "rgba(0, 140, 0, 0.25)",
+    green2: "rgba(120, 220, 120, 1)", green2_fill: "rgba(120, 220, 120, 0.25)"
   };
 
-  // ===========================
-  //  API publique
-  // ===========================
+  // ==============================================================
+  //  🔹 API publique accessible via window.Charts
+  // ==============================================================
+
+  /**
+   * Modifie le plan courant (sagittal/frontal/transverse)
+   * et redessine si des données sont chargées.
+   */
   function setPlane(plane, containerId) {
     currentPlane = plane;
     if (!pyLeft) return;
-    if (containerId) {
-      renderGaitCharts(containerId);
-    }
-  }
-
-  function setViewMode(mode, containerId) {
-    viewMode = mode;
-    if (!pyLeft) return;
-    if (containerId) {
-      renderGaitCharts(containerId);
-    }
-  }
-
-  function getViewMode() {
-    return viewMode;
-  }
-
-  function getCurrentPlane() {
-    return currentPlane;
+    if (containerId) renderGaitCharts(containerId);
   }
 
   /**
-   * Définit les données courantes et dessine les graphes.
-   * @param {Object} py1 - résultat Python essai 1
-   * @param {Object|null} py2 - résultat Python essai 2 (ou null)
-   * @param {string} lbl1
-   * @param {string} lbl2
-   * @param {string} containerId - id du conteneur HTML des charts
+   * Change le mode d'affichage : compact ou detailed
+   */
+  function setViewMode(mode, containerId) {
+    viewMode = mode;
+    if (!pyLeft) return;
+    if (containerId) renderGaitCharts(containerId);
+  }
+
+  function getViewMode() { return viewMode; }
+  function getCurrentPlane() { return currentPlane; }
+
+  /**
+   * Charge les données provenant du backend Python
+   * et déclenche l'affichage des graphes.
    */
   function setData(py1, py2, lbl1, lbl2, containerId) {
     pyLeft = py1;
     pyRight = py2 || null;
     labelLeft = lbl1 || "Essai 1";
     labelRight = lbl2 || "Essai 2";
-
-    if (containerId) {
-      renderGaitCharts(containerId);
-    }
+    if (containerId) renderGaitCharts(containerId);
   }
 
   /**
-   * Redessine les graphes dans un conteneur donné,
-   * en fonction de viewMode et de la présence/absence de pyRight.
+   * Point d'entrée principal pour redessiner selon l'état actuel.
+   * Gère le nombre de graphes selon vue + nombre d’essais.
    */
   function renderGaitCharts(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    container.innerHTML = "";
+    container.innerHTML = ""; // supprime les graphes existants
 
     if (!pyRight) {
       renderSimple(pyLeft, container, labelLeft);
       return;
     }
 
-    if (viewMode === "compact") {
+    if (viewMode === "compact")
       renderCompact(pyLeft, pyRight, container, labelLeft, labelRight);
-    } else {
+    else
       renderDetailed(pyLeft, pyRight, container, labelLeft, labelRight);
-    }
   }
 
-  // ===========================
-  //  1) MODE SIMPLE (1 ESSAI)
-  // ===========================
+
+  // =========================================================================
+  // 🔸 Utilitaires Chart.js
+  // =========================================================================
+
+  /**
+   * Ajoute une zone normative (moyenne ± écart-type) si disponible.
+   */
+  function addNormativeBand(datasets, pyData, joint, plane) {
+    const norm = pyData.normative_curves?.[joint]?.[plane];
+    if (!norm) return;
+
+    const normMean = norm.mean;
+    const normUpper = normMean.map((v, i) => v + norm.std[i]);
+    const normLower = normMean.map((v, i) => v - norm.std[i]);
+
+    // → Le premier dataset est invisible : base du remplissage
+    datasets.push({
+      label: "Norm",
+      data: normLower,
+      borderColor: "transparent",
+      backgroundColor: "transparent",
+      pointRadius: 0,
+      fill: false
+    });
+
+    // → Le second dataset définit la zone visible
+    datasets.push({
+      label: "Norm SD",
+      data: normUpper,
+      borderColor: "transparent",
+      backgroundColor: "rgba(80,80,80,0.25)",
+      fill: "-1",
+      pointRadius: 0
+    });
+  }
+
+  /**
+   * Configuration visuelle standard des graphes (labels dynamiques + traduction)
+   */
+  function chartOptions(joint, side) {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: { title: { display: true, text: t("axes.x_cycle") } },
+        y: { title: { display: true, text: t("axes.y_angle") } }
+      },
+      plugins: {
+        legend: {
+          labels: {
+            filter: item =>
+              !item.text.toLowerCase().includes("lower")
+          }
+        },
+        title: {
+          display: true,
+          text: `${t("joint." + joint)} ${t("side." + side)} — ${t("planes." + currentPlane)}`
+        }
+      }
+    };
+  }
+
+  // =========================================================================
+  // 🔹 MODE 1 ESSAI (6 graphes) — Gauche + Droite
+  // =========================================================================
+
   function renderSimple(py1, container, label1) {
     const joints = ["Hip", "Knee", "Ankle"];
     const sides = ["L", "R"];
@@ -105,419 +161,159 @@
     for (const joint of joints) {
       for (const side of sides) {
         const meanSet = side === "L" ? py1.planes_L : py1.planes_R;
-        const stdSet = side === "L" ? py1.planes_std_L : py1.planes_std_R;
-
-        if (!meanSet || !stdSet || !meanSet[joint] || !stdSet[joint]) {
-          continue;
-        }
+        const stdSet  = side === "L" ? py1.planes_std_L : py1.planes_std_R;
+        if (!meanSet?.[joint] || !stdSet?.[joint]) continue;
 
         const mean = meanSet[joint][currentPlane];
-        const std = stdSet[joint][currentPlane];
-
+        const std  = stdSet[joint][currentPlane];
         if (!mean || !std) continue;
 
-        const lower = mean.map((v, i) => v - std[i]);
-        const upper = mean.map((v, i) => v + std[i]);
-
-        const isLeft = side === "L";
-        const lineColor = isLeft ? COLORS.red1 : COLORS.green1;
-        const fillColor = isLeft ? COLORS.red1_fill : COLORS.green1_fill;
-
-        const card = document.createElement("div");
-        card.className = "chart-card";
-        const canvas = document.createElement("canvas");
-        card.appendChild(canvas);
-        container.appendChild(card);
-
-        new Chart(canvas, {
-          type: "line",
-          data: {
-            labels: x,
-            datasets: [
-              {
-                label: label1,
-                data: mean,
-                borderColor: lineColor,
-                borderWidth: 3,
-                tension: 0.35,
-                pointRadius: 0
-              },
-              {
-                label: "lower",
-                data: lower,
-                borderColor: "transparent",
-                backgroundColor: "transparent",
-                pointRadius: 0,
-                fill: false
-              },
-              {
-                label: `${label1} SD`,
-                data: upper,
-                backgroundColor: fillColor,
-                borderColor: "transparent",
-                fill: "-1",
-                pointRadius: 0
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-
-            scales: {
-              x: {
-                title: { display: true, text: t("axes.x_cycle") }
-              },
-              y: {
-                title: { display: true, text: t("axes.y_angle") }
-              }
-            },
-            plugins: {
-              legend: {
-                labels: { filter: (item) => item.text !== "lower" }
-              },
-              title: {
-                display: true,
-                text: `${t("joint." + joint)} ${t("side." + side)} — ${t(
-                  "planes." + currentPlane
-                )}`
-              }
-            }
-          }
-        });
+        createChart(container, joint, side, label1, mean, std, null, null, py1);
       }
     }
   }
 
-  // ===========================
-  //  2) MODE COMPACT (6 graphes, COMPARAISON)
-  // ===========================
+  // =========================================================================
+  // 🔹 MODE COMPARATIF COMPACT (6 graphes)
+  // =========================================================================
+
   function renderCompact(py1, py2, container, label1, label2) {
     const joints = ["Hip", "Knee", "Ankle"];
     const sides = ["L", "R"];
-    const x = [...Array(101).keys()];
 
     for (const joint of joints) {
       for (const side of sides) {
-        const meanSet1 = side === "L" ? py1.planes_L : py1.planes_R;
-        const stdSet1  = side === "L" ? py1.planes_std_L : py1.planes_std_R;
-        const meanSet2 = side === "L" ? py2.planes_L : py2.planes_R;
-        const stdSet2  = side === "L" ? py2.planes_std_L : py2.planes_std_R;
-
-        if (
-          !meanSet1 || !stdSet1 ||
-          !meanSet2 || !stdSet2 ||
-          !meanSet1[joint] || !stdSet1[joint] ||
-          !meanSet2[joint] || !stdSet2[joint]
-        ) {
-          continue;
-        }
-
-        const m1 = meanSet1[joint][currentPlane];
-        const s1 = stdSet1[joint][currentPlane];
-        const m2 = meanSet2[joint][currentPlane];
-        const s2 = stdSet2[joint][currentPlane];
-
-        if (!m1 || !s1 || !m2 || !s2) continue;
-
-        const lower1 = m1.map((v, i) => v - s1[i]);
-        const upper1 = m1.map((v, i) => v + s1[i]);
-        const lower2 = m2.map((v, i) => v - s2[i]);
-        const upper2 = m2.map((v, i) => v + s2[i]);
-
-        const isLeft = side === "L";
-
-        const line1 = isLeft ? COLORS.red1 : COLORS.green1;
-        const fill1 = isLeft ? COLORS.red1_fill : COLORS.green1_fill;
-
-        const line2 = isLeft ? COLORS.red2 : COLORS.green2;
-        const fill2 = isLeft ? COLORS.red2_fill : COLORS.green2_fill;
-
-        const card = document.createElement("div");
-        card.className = "chart-card";
-        const canvas = document.createElement("canvas");
-        card.appendChild(canvas);
-        container.appendChild(card);
-
-        new Chart(canvas, {
-          type: "line",
-          data: {
-            labels: x,
-            datasets: [
-              // COURBE ESSAI 1
-              {
-                label: label1,
-                data: m1,
-                borderColor: line1,
-                borderWidth: 3,
-                tension: 0.35,
-                pointRadius: 0
-              },
-              {
-                label: "lower1",
-                data: lower1,
-                borderColor: "transparent",
-                backgroundColor: "transparent",
-                pointRadius: 0,
-                fill: false
-              },
-              {
-                label: `${label1} SD`,
-                data: upper1,
-                backgroundColor: fill1,
-                borderColor: "transparent",
-                fill: "-1",
-                pointRadius: 0
-              },
-
-              // COURBE ESSAI 2
-              {
-                label: label2,
-                data: m2,
-                borderColor: line2,
-                borderWidth: 3,
-                tension: 0.35,
-                pointRadius: 0
-              },
-              {
-                label: "lower2",
-                data: lower2,
-                borderColor: "transparent",
-                backgroundColor: "transparent",
-                pointRadius: 0,
-                fill: false
-              },
-              {
-                label: `${label2} SD`,
-                data: upper2,
-                backgroundColor: fill2,
-                borderColor: "transparent",
-                fill: "-1",
-                pointRadius: 0
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                title: { display: true, text: t("axes.x_cycle") }
-              },
-              y: {
-                title: { display: true, text: t("axes.y_angle") }
-              }
-            },
-            plugins: {
-              legend: {
-                labels: {
-                  filter: (item) =>
-                    item.text !== "lower1" && item.text !== "lower2"
-                }
-              },
-              title: {
-                display: true,
-                text: `${t("joint." + joint)} ${t("side." + side)} — ${t(
-                  "planes." + currentPlane
-                )} (${t("charts.comparison")})`
-              }
-            }
-          }
-        });
+        createCombinedChart(container, joint, side, py1, py2, label1, label2);
       }
     }
   }
 
-  // ===========================
-  //  3) MODE DÉTAILLÉ (12 graphes, COMPARAISON)
-  // ===========================
+  // =========================================================================
+  // 🔹 MODE COMPARATIF DÉTAILLÉ (12 graphes)
+  // =========================================================================
+
   function renderDetailed(py1, py2, container, label1, label2) {
     const joints = ["Hip", "Knee", "Ankle"];
     const sides = ["L", "R"];
-    const x = [...Array(101).keys()];
 
-    // ======= Boucle : ESSAI 1 (6 graphes) =======
-    for (const joint of joints) {
-      for (const side of sides) {
-        const meanSet = side === "L" ? py1.planes_L : py1.planes_R;
-        const stdSet  = side === "L" ? py1.planes_std_L : py1.planes_std_R;
+    for (const dataObj of [
+      { py: py1, label: label1, color: [COLORS.red1, COLORS.green1], fill: [COLORS.red1_fill, COLORS.green1_fill] },
+      { py: py2, label: label2, color: [COLORS.red2, COLORS.green2], fill: [COLORS.red2_fill, COLORS.green2_fill] }
+    ]) {
+      for (const joint of joints) {
+        for (const side of sides) {
+          const meanSet = side === "L" ? dataObj.py.planes_L : dataObj.py.planes_R;
+          const stdSet  = side === "L" ? dataObj.py.planes_std_L : dataObj.py.planes_std_R;
+          if (!meanSet?.[joint] || !stdSet?.[joint]) continue;
 
-        if (!meanSet || !stdSet || !meanSet[joint] || !stdSet[joint]) {
-          continue;
+          const m = meanSet[joint][currentPlane];
+          const s = stdSet[joint][currentPlane];
+          if (!m || !s) continue;
+
+          createChart(
+            container,
+            joint,
+            side,
+            dataObj.label,
+            m,
+            s,
+            dataObj.color,
+            dataObj.fill,
+            dataObj.py
+          );
         }
-
-        const m = meanSet[joint][currentPlane];
-        const s = stdSet[joint][currentPlane];
-
-        if (!m || !s) continue;
-
-        const lower = m.map((v, i) => v - s[i]);
-        const upper = m.map((v, i) => v + s[i]);
-
-        const isLeft = side === "L";
-        const lineColor = isLeft ? COLORS.red1 : COLORS.green1;
-        const fillColor = isLeft ? COLORS.red1_fill : COLORS.green1_fill;
-
-        const card = document.createElement("div");
-        card.className = "chart-card";
-
-        const canvas = document.createElement("canvas");
-        card.appendChild(canvas);
-        container.appendChild(card);
-
-        new Chart(canvas, {
-          type: "line",
-          data: {
-            labels: x,
-            datasets: [
-              {
-                label: label1,
-                data: m,
-                borderColor: lineColor,
-                borderWidth: 3,
-                tension: 0.35,
-                pointRadius: 0
-              },
-              {
-                label: "lower1",
-                data: lower,
-                borderColor: "transparent",
-                backgroundColor: "transparent",
-                pointRadius: 0,
-                fill: false
-              },
-              {
-                label: `${label1} SD`,
-                data: upper,
-                fill: "-1",
-                backgroundColor: fillColor,
-                borderColor: "transparent",
-                pointRadius: 0
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                title: { display: true, text: t("axes.x_cycle") }
-              },
-              y: {
-                title: { display: true, text: t("axes.y_angle") }
-              }
-            },
-            plugins: {
-              legend: {
-                labels: {
-                  filter: (item) => item.text !== "lower1"
-                }
-              },
-              title: {
-                display: true,
-                text: `${t("joint." + joint)} ${t(
-                  "side." + side
-                )} — ${t("planes." + currentPlane)} — ${label1}`
-              }
-            }
-          }
-        });
-      }
-    }
-
-    // ======= Boucle : ESSAI 2 (6 graphes) =======
-    for (const joint of joints) {
-      for (const side of sides) {
-        const meanSet = side === "L" ? py2.planes_L : py2.planes_R;
-        const stdSet  = side === "L" ? py2.planes_std_L : py2.planes_std_R;
-
-        if (!meanSet || !stdSet || !meanSet[joint] || !stdSet[joint]) {
-          continue;
-        }
-
-        const m = meanSet[joint][currentPlane];
-        const s = stdSet[joint][currentPlane];
-
-        if (!m || !s) continue;
-
-        const lower = m.map((v, i) => v - s[i]);
-        const upper = m.map((v, i) => v + s[i]);
-
-        const isLeft = side === "L";
-        const lineColor = isLeft ? COLORS.red2 : COLORS.green2;
-        const fillColor = isLeft ? COLORS.red2_fill : COLORS.green2_fill;
-
-        const card = document.createElement("div");
-        card.className = "chart-card";
-
-        const canvas = document.createElement("canvas");
-        card.appendChild(canvas);
-        container.appendChild(card);
-
-        new Chart(canvas, {
-          type: "line",
-          data: {
-            labels: x,
-            datasets: [
-              {
-                label: label2,
-                data: m,
-                borderColor: lineColor,
-                borderWidth: 3,
-                tension: 0.35,
-                pointRadius: 0
-              },
-              {
-                label: "lower2",
-                data: lower,
-                borderColor: "transparent",
-                backgroundColor: "transparent",
-                pointRadius: 0,
-                fill: false
-              },
-              {
-                label: `${label2} SD`,
-                data: upper,
-                fill: "-1",
-                backgroundColor: fillColor,
-                borderColor: "transparent",
-                pointRadius: 0
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            scales: {
-              x: {
-                title: { display: true, text: t("axes.x_cycle") }
-              },
-              y: {
-                title: { display: true, text: t("axes.y_angle") }
-              }
-            },
-            plugins: {
-              legend: {
-                labels: {
-                  filter: (item) => item.text !== "lower2"
-                }
-              },
-              title: {
-                display: true,
-                text: `${t("joint." + joint)} ${t(
-                  "side." + side
-                )} — ${t("planes." + currentPlane)} — ${label2}`
-              }
-            }
-          }
-        });
       }
     }
   }
 
-  // ===========================
-  //  Export global
-  // ===========================
+  // =========================================================================
+  //  🔸 Fonctions généralisées de création des graphes
+  // =========================================================================
+
+  /** Création générique d'un graphique pour 1 Dataset */
+  function createChart(container, joint, side, label, mean, std, colors, fills, py) {
+    const card = document.createElement("div");
+    card.className = "chart-card";
+    const canvas = document.createElement("canvas");
+    card.appendChild(canvas);
+    container.appendChild(card);
+
+    const datasets = [];
+    addNormativeBand(datasets, py, joint, currentPlane);
+
+    const x = [...Array(101).keys()];
+    const isLeft = side === "L";
+    const lineColor = colors ? (isLeft ? colors[0] : colors[1]) : (isLeft ? COLORS.red1 : COLORS.green1);
+    const fillColor = fills ? (isLeft ? fills[0] : fills[1]) : (isLeft ? COLORS.red1_fill : COLORS.green1_fill);
+
+    datasets.push({
+      label,
+      data: mean,
+      borderColor: lineColor,
+      borderWidth: 3,
+      tension: 0.35,
+      pointRadius: 0
+    });
+
+    datasets.push({
+      label: `${label} SD`,
+      data: mean.map((v, i) => v + std[i]),
+      backgroundColor: fillColor,
+      borderColor: "transparent",
+      fill: "-1",
+      pointRadius: 0
+    });
+
+    new Chart(canvas, {
+      type: "line",
+      data: { labels: x, datasets },
+      options: chartOptions(joint, side)
+    });
+  }
+
+  /** Création d'un graphique pour COMPARE 2 essais */
+  function createCombinedChart(container, joint, side, py1, py2, label1, label2) {
+    const mean1 = (side === "L" ? py1.planes_L : py1.planes_R)?.[joint]?.[currentPlane];
+    const std1  = (side === "L" ? py1.planes_std_L : py1.planes_std_R)?.[joint]?.[currentPlane];
+    const mean2 = (side === "L" ? py2.planes_L : py2.planes_R)?.[joint]?.[currentPlane];
+    const std2  = (side === "L" ? py2.planes_std_L : py2.planes_std_R)?.[joint]?.[currentPlane];
+
+    if (!mean1 || !std1 || !mean2 || !std2) return;
+
+    const card = document.createElement("div");
+    card.className = "chart-card";
+    const canvas = document.createElement("canvas");
+    card.appendChild(canvas);
+    container.appendChild(card);
+
+    const datasets = [];
+    addNormativeBand(datasets, py1, joint, currentPlane);
+
+    const x = [...Array(101).keys()];
+    const isLeft = side === "L";
+
+    const c1 = isLeft ? COLORS.red1 : COLORS.green1;
+    const f1 = isLeft ? COLORS.red1_fill : COLORS.green1_fill;
+    const c2 = isLeft ? COLORS.red2 : COLORS.green2;
+    const f2 = isLeft ? COLORS.red2_fill : COLORS.green2_fill;
+
+    datasets.push({ label: label1, data: mean1, borderColor: c1, borderWidth: 3, tension: 0.35, pointRadius: 0 });
+    datasets.push({ label: `${label1} SD`, data: mean1.map((v,i)=>v+std1[i]), backgroundColor: f1, fill:"-1", pointRadius:0 });
+
+    datasets.push({ label: label2, data: mean2, borderColor: c2, borderWidth: 3, tension: 0.35, pointRadius: 0 });
+    datasets.push({ label: `${label2} SD`, data: mean2.map((v,i)=>v+std2[i]), backgroundColor: f2, fill:"-1", pointRadius:0 });
+
+    new Chart(canvas, {
+      type: "line",
+      data: { labels: x, datasets },
+      options: chartOptions(joint, side)
+    });
+  }
+
+  // ==============================================================
+  //  🔹 Export global
+  // ==============================================================
+
   global.Charts = {
     setPlane,
     setViewMode,
@@ -526,4 +322,5 @@
     setData,
     renderGaitCharts
   };
+
 })(window);

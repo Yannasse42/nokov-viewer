@@ -16,16 +16,18 @@ def read_htr(path,
     else:
         raise ValueError("Au moins une des options 'rot' ou 'trans' doit être activée.")
 
-    # 🔍 Cherche si un 2ᵉ fichier .htr existe → static
     folder = os.path.dirname(path)
-    htr_files = [f for f in os.listdir(folder) if f.endswith(".htr")]
+    basename = os.path.basename(path)
 
+    # Trouver dynamique = celui donné en paramètre (il doit contenir "_dynamic")
+    dynamic_file = path
+
+    # Trouver static = fichier .htr dans le même dossier SANS "_dynamic"
     static_file = None
-    if len(htr_files) > 1:
-        for f in htr_files:
-            if f != os.path.basename(path) and "static" in f.lower():
-                static_file = os.path.join(folder, f)
-                break
+    for f in os.listdir(folder):
+        if f.endswith(".htr") and "_dynamic" not in f.lower() and f != basename:
+            static_file = os.path.join(folder, f)
+            break
 
     def _load(file_path):
         with open(file_path, 'r', encoding='utf-8') as f:
@@ -44,16 +46,16 @@ def read_htr(path,
         return d
 
     # Lecture dynamique
-    dico = _load(path)
+    dico = _load(dynamic_file)
 
-    # Si aucun static => retour direct
+    # Si pas de static => retour identique
     if static_file is None:
         return dico
 
     # Lecture static
     static_data = _load(static_file)
 
-    # Correction : dynamique - mean(static)
+    # Correction : dynamique - moyenne(static)
     for seg in dico:
         if seg in static_data:
             dico[seg] = dico[seg] - static_data[seg].mean()

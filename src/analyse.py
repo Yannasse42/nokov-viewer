@@ -3,6 +3,8 @@ import json
 import math
 import pandas as pd
 import numpy as np
+import os
+
 
 from nokov import read_htr
 from func import (
@@ -24,6 +26,57 @@ from func import (
 def debug(*args):
     print(*args, file=sys.stderr)
 
+# 📦 Lecture des courbes normatives
+def load_normative_curves():
+    excel_path = os.path.join(os.path.dirname(__file__), "Gait_Joint_Angle_Normative_Data.xlsx")
+    df = pd.read_excel(excel_path)
+
+    normative = {
+        "Hip": {
+            "sagittal": {
+                "mean": df["Hip Sagittal mean"].tolist(),
+                "std": df["Hip Sagittal SD"].tolist()
+            },
+            "frontal": {
+                "mean": df["Hip Frontal mean"].tolist(),
+                "std": df["Hip Frontal SD"].tolist()
+            },
+            "transverse": {
+                "mean": df["Hip Longitudinal mean"].tolist(),
+                "std": df["Hip Longitudinal SD"].tolist()
+            }
+        },
+        "Knee": {
+            "sagittal": {
+                "mean": df["Knee Sagittal mean"].tolist(),
+                "std": df["Knee Sagittal SD"].tolist()
+            },
+            "frontal": {
+                "mean": df["Knee Frontal mean"].tolist(),
+                "std": df["Knee Frontal SD"].tolist()
+            },
+            "transverse": {
+                "mean": df["Knee Longitudinal mean"].tolist(),
+                "std": df["Knee Longitudinal SD"].tolist()
+            }
+        },
+        "Ankle": {
+            "sagittal": {
+                "mean": df["Ankle Sagittal mean"].tolist(),
+                "std": df["Ankle Sagittal SD"].tolist()
+            },
+            "frontal": {
+                "mean": df["Ankle Frontal mean"].tolist(),
+                "std": df["Ankle Frontal SD"].tolist()
+            },
+            "transverse": {
+                "mean": df["Ankle Longitudinal mean"].tolist(),
+                "std": df["Ankle Longitudinal SD"].tolist()
+            }
+        }
+    }
+
+    return normative
 
 # ==========================================================
 #  Modèles biomécaniques & facteurs de correction
@@ -81,6 +134,21 @@ def process(htr_path: str, trc_path: str, modele: str):
 
     if modele not in MODELES:
         raise ValueError(f"Modèle inconnu : {modele}")
+    
+        # 🔍 Vérifier s'il existe un fichier static dans le dossier
+    folder = os.path.dirname(htr_path)
+    basename = os.path.basename(htr_path)
+
+    static_used = False
+    for f in os.listdir(folder):
+        if f.endswith(".htr") and "_dynamic" not in f.lower() and f != basename:
+            static_used = True
+            debug(f"Static détecté : {f} → correction dynamique appliquée")
+            break
+
+    if not static_used:
+        debug("⚠️ Aucun fichier static détecté → angles NON corrigés, discrets masqués")
+
 
     # 1) Lecture HTR
     angleData = read_htr(
@@ -256,6 +324,28 @@ def process(htr_path: str, trc_path: str, modele: str):
 
     def pst_raw_to_dict(p):
         return {k: [float(v[0]), float(v[1])] for k, v in p.items()}
+    
+    normative_curves = None
+    if static_used:
+        debug("📚 Chargement des courbes normatives (Hip / Knee / Ankle)")
+        normative_curves = load_normative_curves()
+
+        debug("\n================= NORMATIVE CURVES LOADED =================")
+        for joint, planes in normative_curves.items():
+            debug(f"\n--- {joint.upper()} ---")
+            for plane, stats in planes.items():
+                debug(f"{plane.capitalize()} -> "
+                    f"Mean length: {len(stats['mean'])}, "
+                    f"STD length: {len(stats['std'])}")
+                
+                # Print first 5 values for quick check
+                debug(f"Sample Mean: {stats['mean'][:5]}")
+                debug(f"Sample STD : {stats['std'][:5]}")
+
+        debug("==========================================================\n")
+
+    else:
+        debug("🚫 Pas de static → pas de courbes normatives affichées")
 
     return {
         "htr_file": htr_path,
@@ -278,8 +368,9 @@ def process(htr_path: str, trc_path: str, modele: str):
         "planes_std_R": extra_std_R,
         # 🔥 Nouveaux exports : stats cinématiques sagittales
         "kinematic_L_meanstd": kinematic_L_stats,
-        "kinematic_R_meanstd": kinematic_R_stats
-            
+        "kinematic_R_meanstd": kinematic_R_stats,
+
+        "normative_curves": normative_curves,
     }
 
 # ==========================================================
