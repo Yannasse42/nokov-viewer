@@ -114,7 +114,7 @@
 
     // → Le second dataset définit la zone visible
     datasets.push({
-      label: "Norm SD",
+      label: t("charts.normative"),
       data: normUpper,
       borderColor: "transparent",
       backgroundColor: "rgba(80,80,80,0.25)",
@@ -137,8 +137,13 @@
       plugins: {
         legend: {
           labels: {
-            filter: item =>
-              !item.text.toLowerCase().includes("lower")
+            filter: (item) => {
+              const txt = item.text.toLowerCase();
+              // On masque :
+              //  - "lower"  (les datasets de base pour le fill)
+              //  - "norm" EXACT (la courbe basse invisible)
+              return txt !== "norm" && !txt.includes("lower");
+            }
           }
         },
         title: {
@@ -148,6 +153,7 @@
       }
     };
   }
+
 
   // =========================================================================
   // 🔹 MODE 1 ESSAI (6 graphes) — Gauche + Droite

@@ -72,6 +72,7 @@ const translations = {
 
         charts: {
             comparison: "Comparaison",
+            normative: "Norme (±1 ET)" // <-- AJOUT FR
         },
 
         joint: {
@@ -93,7 +94,7 @@ const translations = {
 
             header_param: "Paramètre",
             header_value: "Valeur",
-            header_mean_sd: "Moyenne ± Écart-type",
+            header_mean_sd: "Moyenne ± ET",
 
             distance: "Distance (m)",
             duration: "Durée (s)",
@@ -129,8 +130,8 @@ const translations = {
 
             column: {
                 parameter: "Paramètre",
-                left: "Gauche (moy ± SD)",
-                right: "Droit (moy ± SD)"
+                left: "Gauche (moy ± ET)",
+                right: "Droit (moy ± ET)"
             },
 
             // Sagittal
@@ -196,7 +197,7 @@ const translations = {
 
         tabs: {
             curves: "Charts",
-            pst: "PST",
+            pst: "STP",
         },
 
         axes: {
@@ -242,6 +243,7 @@ const translations = {
 
         charts: {
             comparison: "Comparison",
+            normative: "Normative (±1 SD)" // <-- AJOUT EN
         },
 
         joint: {
@@ -256,7 +258,7 @@ const translations = {
         },
 
         pst: {
-            title: "PST — Spatiotemporal parameters",
+            title: "STP — Spatiotemporal parameters",
             global_section: "Global",
             left_title: "Left Side",
             right_title: "Right Side",
@@ -362,7 +364,7 @@ const translations = {
 
         tabs: {
             curves: "曲线",
-            pst: "PST",
+            pst: "时空参数",
         },
 
         axes: {
@@ -408,7 +410,9 @@ const translations = {
 
         charts: {
             comparison: "对比",
+            normative: "标准范围 (±1 标准差)" // <-- AJOUT CN
         },
+
 
         joint: {
             Hip: "髋关节",
@@ -422,7 +426,7 @@ const translations = {
         },
 
         pst: {
-            title: "PST — 时空参数",
+            title: "时空参数",
             global_section: "整体",
             left_title: "左侧",
             right_title: "右侧",
@@ -444,9 +448,9 @@ const translations = {
             step_time: "步时 (s)",
             stride_time: "步态周期 (s)",
 
-            swing: "摆动相 (%GC)",
-            stance: "支撑相 (%GC)",
-            double_support: "双支撑 (%GC)",
+            swing: "摆动相 (步态周期 %)",
+            stance: "支撑相 (步态周期 %)",
+            double_support: "双支撑 (步态周期 %)",
 
             left: "左侧",
             right: "右侧",

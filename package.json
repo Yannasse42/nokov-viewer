@@ -1,6 +1,6 @@
 {
   "name": "nokov-viewer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Nokov Viewer - Analyse de marche, cinématique, PST",
   "main": "main.js",
   "author": "Yann Villard",
