@@ -17,5 +17,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     setMenuLanguage: (lang) => ipcRenderer.send("update-menu-language", lang),
 
     // 👇 FIX : maintenant shell est correctement importé
-    openExternal: (url) => shell.openExternal(url)
+    openExternal: (url) => shell.openExternal(url),
+    onSetNumberFormat: (callback) => ipcRenderer.on("set-number-format", callback),
+
 });

@@ -23,6 +23,62 @@ const UIState = {
     currentPlane_compare: "sagittal",
 };
 
+
+// ============================================================================
+//  FORMATAGE DES NOMBRES (selon menu Affichage)
+// ============================================================================
+let numberFormat = localStorage.getItem("numberFormat") || "1dec";
+
+function formatNumber(value) {
+    if (value == null || isNaN(value)) return "-";
+    const n = Number(value);
+
+    if (numberFormat === "round") {
+        return Math.round(n).toString();
+    }
+
+    if (numberFormat === "1dec") {
+        const v = n.toFixed(1);
+        return v.endsWith(".0") ? Math.round(n).toString() : v;
+    }
+
+    if (numberFormat === "2dec") {
+        const v = n.toFixed(2);
+        return v.endsWith(".00") ? Math.round(n).toString() : v.replace(/0$/, "");
+    }
+
+    return Math.round(n).toString();
+}
+
+
+window.formatNumber = formatNumber;
+
+
+// Recevoir mise à jour depuis le menu Electron
+window.electronAPI.onSetNumberFormat((event, format) => {
+    numberFormat = format;
+    localStorage.setItem("numberFormat", format);
+
+    // 🔄 Mise à jour UI immédiate
+    if (UIState.currentPage === "page_one" && currentPyOneResult) {
+        Charts.refreshAllCharts();
+        renderKinematicSummary(currentPyOneResult, UIState.currentPlane_one);
+        PST.refreshFormatting();
+    }
+
+    if (UIState.currentPage === "page_compare" && currentPyCompare1 && currentPyCompare2) {
+        Charts.refreshAllCharts();
+        displayKinematic_compare(
+            currentPyCompare1, currentPyCompare2,
+            essai1Name, essai2Name,
+            UIState.currentPlane_compare
+        );
+        PST.refreshFormatting();
+    }
+});
+
+
+
 // Ajout pour mémoriser résultats comparaison
 let currentPyCompare1 = null;
 let currentPyCompare2 = null;
@@ -554,8 +610,9 @@ window.addEventListener("DOMContentLoaded", () => {
     function renderKinematicSummary(py, plane = "sagittal") {
 
         function formatValue(key, obj) {
-            const mean = obj.mean.toFixed(2);
-            const sd   = obj.std.toFixed(2);
+            const mean = formatNumber(obj.mean);
+            const sd   = formatNumber(obj.std);
+
 
             if (key.toLowerCase().includes("index")) {
                 return `${mean}% ± ${sd}`;
@@ -674,9 +731,9 @@ window.addEventListener("DOMContentLoaded", () => {
         // Format valeur ± SD (et BOLD intelligent)
         const formatValue = (key, obj, objCompare) => {
 
-            const m = Number(obj.mean.toFixed(2));
-            const s = Number(obj.std.toFixed(2));
-            const mc = Number(objCompare.mean.toFixed(2));
+            const m = Number(formatNumber(obj.mean));
+            const s = Number(formatNumber(obj.std));
+            const mc = Number(formatNumber(objCompare.mean));
 
             const text = key.toLowerCase().includes("index")
                 ? `${m}% ± ${s}`

@@ -10,10 +10,6 @@ const { app, BrowserWindow, ipcMain, dialog, Menu } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
-
-const { modeles, correction_factor } = require("./src/modeles");
-const { readHTR, readTRC } = require("./src/readers");
-
 const SETTINGS_PATH = path.join(app.getPath("userData"), "settings.json");
 
 
@@ -39,7 +35,11 @@ if (!gotTheLock) {
 // ============================================================================
 // 2) GESTION DES SETTINGS (langue…)
 // ============================================================================
-let appSettings = { lang: "fr" };
+let appSettings = {
+  lang: "fr",
+  numberFormat: "round" // ⬅ full | 1dec | round
+};
+
 
 // Charger paramètres
 function loadSettings() {
@@ -102,6 +102,31 @@ function buildMenu(win) {
         }
       ]
     },
+    // ---------------- DISPLAY ----------------
+    {
+      label: "Display",
+      submenu: [
+        {
+          label: "Rounded (0 dec)",
+          type: "radio",
+          checked: appSettings.numberFormat === "round",
+          click: () => updateNumberFormat("round", win)
+        },
+        {
+          label: "1 decimal",
+          type: "radio",
+          checked: appSettings.numberFormat === "1dec",
+          click: () => updateNumberFormat("1dec", win)
+        },
+        {
+          label: "2 decimals",
+          type: "radio",
+          checked: appSettings.numberFormat === "2dec",
+          click: () => updateNumberFormat("2dec", win)
+        }
+      ]
+    },
+
 
     // ---------------- HELP ----------------
     {
@@ -128,6 +153,14 @@ function updateLanguage(lang, win) {
   win.webContents.send("set-language", lang);
   buildMenu(win);
 }
+
+function updateNumberFormat(format, win) {
+  appSettings.numberFormat = format;
+  saveSettings();
+  win.webContents.send("set-number-format", format);
+  buildMenu(win);
+}
+
 
 const iconPath = app.isPackaged
   ? path.join(process.resourcesPath, "icon.ico")
@@ -272,30 +305,40 @@ ipcMain.handle("read-trc", (_, p) => readTRC(p));
 
 
 // ============================================================================
-// 10) IPC — EXECUTION PYTHON (analyse.py)
+// 10) IPC — EXECUTION PYTHON ANALYSE.EXE / analyse.py
 // ============================================================================
-function getPythonScriptPath() {
+function getPythonExecutable() {
   if (app.isPackaged) {
-    return path.join(process.resourcesPath, "src", "analyse.py");
+    // EXE dans production
+    return path.join(process.resourcesPath, "analyse", "analyse.exe");
   } else {
-    return path.join(__dirname, "src", "analyse.py");
+    // Dev → Python installé
+    return "python";
   }
 }
 
-function getPythonExecutable() {
-  // Si tu veux embarquer python.exe : on modifie ici
-  return process.platform ==="darwin" ? "python3" : "python";
+function getPythonArguments(args) {
+  if (app.isPackaged) {
+    // En production → passe seulement le JSON
+    return [JSON.stringify(args)];
+  } else {
+    // En développement → appelle analyse.py directement
+    return [
+      path.join(__dirname, "src", "analyse.py"),
+      JSON.stringify(args)
+    ];
+  }
 }
 
 ipcMain.handle("run-python", async (_, args) => {
   return new Promise((resolve, reject) => {
 
-    const scriptPath = getPythonScriptPath();
     const pythonExec = getPythonExecutable();
+    const pyArgs = getPythonArguments(args);
 
-    console.log("RUN PY:", pythonExec, scriptPath);
+    console.log("RUN PY:", pythonExec, pyArgs);
 
-    const py = spawn(pythonExec, [scriptPath, JSON.stringify(args)], {
+    const py = spawn(pythonExec, pyArgs, {
       windowsHide: true
     });
 
@@ -304,7 +347,6 @@ ipcMain.handle("run-python", async (_, args) => {
 
     py.stdout.on("data", data => stdout += data.toString());
 
-    // 🔥 Logs Python visibles dans DevTools
     py.stderr.on("data", data => {
       const message = data.toString();
       stderr_data += message;
@@ -312,8 +354,6 @@ ipcMain.handle("run-python", async (_, args) => {
     });
 
     py.on("close", code => {
-      console.log("PYTHON EXIT CODE:", code);
-
       if (stderr_data) console.log("FULL STDERR LOG:", stderr_data);
 
       if (code !== 0) return reject(`Python exit code ${code}`);
@@ -324,12 +364,12 @@ ipcMain.handle("run-python", async (_, args) => {
         resolve(JSON.parse(stdout));
       } catch (e) {
         console.log("RAW PYTHON OUT:", stdout);
-        return reject("JSON invalide — voir stderr.");
+        reject("JSON invalide !");
       }
     });
-
   });
 });
+
 
 
 // ============================================================================

@@ -86,7 +86,9 @@ const translations = {
             L: "Gauche",
             R: "Droite",
         },
-
+        "toeoff": {
+            "legend": "Toe-Off"
+        },
         pst: {
             title: "PST — Paramètres spatio-temporels",
             global_section: "Global",
@@ -122,6 +124,7 @@ const translations = {
         },
         kinematic: {
             title: "Paramètres cinématiques – {plane}",
+            title_short: "Paramètres cinématiques", 
 
             plane: {
                 sagittal: "Sagittal (Flex/Ext)",
@@ -569,6 +572,7 @@ const translations = {
         },
         kinematic: {
             title: "Kinematic parameters – {plane}",
+            title_short: "Kinematic parameters",
 
             plane: {
                 sagittal: "Sagittal (Flex/Ext)",
@@ -974,6 +978,7 @@ const translations = {
         },
         kinematic: {
             title: "运动学参数 – {plane}",
+            title_short: "运动学参数",
 
             plane: {
                 sagittal: "矢状面 (屈伸)",

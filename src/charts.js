@@ -294,14 +294,26 @@
       pointRadius: 0
     });
 
+    // Bande inférieure = mean - SD
     datasets.push({
-      label: `${label} SD`,
-      data: mean.map((v, i) => v + std[i]),
-      backgroundColor: fillColor,
+      label: "",
+      data: mean.map((v,i)=>v - std[i]),
       borderColor: "transparent",
+      backgroundColor: fillColor,
+      fill: "+1",
+      pointRadius: 0
+    });
+
+    // Bande supérieure = mean + SD (Légende pour les ±SD)
+    datasets.push({
+      label: `${label} ± SD`,
+      data: mean.map((v,i)=>v + std[i]),
+      borderColor: "transparent",
+      backgroundColor: fillColor,
       fill: "-1",
       pointRadius: 0
     });
+
 
     new Chart(canvas, {
       type: "line",
@@ -316,7 +328,6 @@
     const std1  = (side === "L" ? py1.planes_std_L : py1.planes_std_R)?.[joint]?.[currentPlane];
     const mean2 = (side === "L" ? py2.planes_L : py2.planes_R)?.[joint]?.[currentPlane];
     const std2  = (side === "L" ? py2.planes_std_L : py2.planes_std_R)?.[joint]?.[currentPlane];
-
     if (!mean1 || !std1 || !mean2 || !std2) return;
 
     const card = document.createElement("div");
@@ -330,20 +341,69 @@
     addToeOffMarkers(datasets, py1, side);
     addToeOffMarkers(datasets, py2, side);
 
-
     const x = [...Array(101).keys()];
-    const isLeft = side === "L";
+    const isLeft = (side === "L");
 
     const c1 = isLeft ? COLORS.red1 : COLORS.green1;
     const f1 = isLeft ? COLORS.red1_fill : COLORS.green1_fill;
     const c2 = isLeft ? COLORS.red2 : COLORS.green2;
     const f2 = isLeft ? COLORS.red2_fill : COLORS.green2_fill;
 
-    datasets.push({ label: label1, data: mean1, borderColor: c1, borderWidth: 3, tension: 0.35, pointRadius: 0 });
-    datasets.push({ label: `${label1} SD`, data: mean1.map((v,i)=>v+std1[i]), backgroundColor: f1, fill:"-1", pointRadius:0 });
+    // PY1 Bande + Moyenne
+    datasets.push({
+      label: "",
+      data: mean1.map((v, i) => v - std1[i]),
+      backgroundColor: f1,
+      borderColor: "transparent", // ⛔ aucun contour
+      borderWidth: 0,
+      fill: "+1",
+      pointRadius: 0
+    });
+    datasets.push({
+      label: `${label1} ± SD`,
+      data: mean1.map((v, i) => v + std1[i]),
+      backgroundColor: f1,
+      borderColor: "transparent", // ⛔ aucun contour
+      borderWidth: 0,
+      fill: "-1",
+      pointRadius: 0
+    });
+    datasets.push({
+      label: label1,
+      data: mean1,
+      borderColor: c1,
+      borderWidth: 3,
+      tension: 0.35,
+      pointRadius: 0
+    });
 
-    datasets.push({ label: label2, data: mean2, borderColor: c2, borderWidth: 3, tension: 0.35, pointRadius: 0 });
-    datasets.push({ label: `${label2} SD`, data: mean2.map((v,i)=>v+std2[i]), backgroundColor: f2, fill:"-1", pointRadius:0 });
+    // PY2 Bande + Moyenne
+    datasets.push({
+      label: "",
+      data: mean2.map((v, i) => v - std2[i]),
+      backgroundColor: f2,
+      borderColor: "transparent", // ⛔ aucun contour
+      borderWidth: 0,
+      fill: "+1",
+      pointRadius: 0
+    });
+    datasets.push({
+      label: `${label2} ± SD`,
+      data: mean2.map((v, i) => v + std2[i]),
+      backgroundColor: f2,
+      borderColor: "transparent", // ⛔ aucun contour
+      borderWidth: 0,
+      fill: "-1",
+      pointRadius: 0
+    });
+    datasets.push({
+      label: label2,
+      data: mean2,
+      borderColor: c2,
+      borderWidth: 3,
+      tension: 0.35,
+      pointRadius: 0
+    });
 
     new Chart(canvas, {
       type: "line",
@@ -352,45 +412,64 @@
     });
   }
 
+
   Chart.register({
     id: 'toeoff-line-plugin',
     afterDatasetDraw(chart) {
       const yScale = chart.scales.y;
       const xScale = chart.scales.x;
-  
+
       chart.data.datasets.forEach(ds => {
         if (!ds.toeOff) return;
-  
+
         const x = xScale.getPixelForValue(ds.toeOff.xIndex);
         const color = ds.toeOff.color;
-  
+
         const top = yScale.top;
         const bottom = yScale.bottom;
-  
-        chart.ctx.save();
-        chart.ctx.beginPath();
-        chart.ctx.strokeStyle = color;
-        chart.ctx.lineWidth = 3;
-        chart.ctx.moveTo(x, top);
-        chart.ctx.lineTo(x, bottom);
-        chart.ctx.stroke();
-        chart.ctx.restore();
+
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.beginPath();
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;       // ⬅️ plus fine
+        ctx.setLineDash([4, 4]);   // ⬅️ pointillé : 4px trait / 4px espace
+
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, bottom);
+        ctx.stroke();
+
+        ctx.restore();
       });
     }
   });
-  
+
+
+  function refreshFormatting() {
+    // 🔄 Re-render les graphes avec le nouveau format
+    if (!pyLeft) return;
+
+    const active =
+      UIState?.currentPage === "page_one"
+        ? "charts_one"
+        : "charts_container";
+
+    renderGaitCharts(active);
+  }
+
 
   // ==============================================================
   //  🔹 Export global
   // ==============================================================
-
   global.Charts = {
     setPlane,
     setViewMode,
     getViewMode,
     getCurrentPlane,
     setData,
-    renderGaitCharts
+    renderGaitCharts,
+    refreshFormatting
   };
 
 })(window);

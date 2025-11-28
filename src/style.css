@@ -827,7 +827,7 @@ button:hover {
 
 .kinematic-title::after {
     content: "";
-    display: block;
+    display: none;
     width: 60px;
     height: 4px;
     background: var(--OneColor);
@@ -1388,4 +1388,89 @@ canvas#pst-radar-canvas {
     position: absolute;
     top: 8px;
     right: 8px;
+}
+
+/* ========================================================================= */
+/* CINÉTIQUE — Style Premium NOKOV                                          */
+/* ========================================================================= */
+
+.kinetic-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f8f8 100%);
+    border-radius: var(--radius);
+    padding: 28px;
+    border: 1px solid #ddd;
+    box-shadow: 0px 4px 14px rgba(0,0,0,0.08);
+    animation: fadeIn 0.3s ease;
+    margin-top: 25px;
+    transition: transform 0.25s ease;
+}
+
+.kinetic-card:hover {
+    transform: translateY(-3px);
+}
+
+/* Sélecteur 2D / 3D */
+.kinetic-mode-selector {
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    margin-bottom: 25px;
+}
+
+.kinetic-btn input {
+    display: none;
+}
+
+.kinetic-btn span {
+    padding: 12px 26px;
+    border-radius: 50px;
+    background-color: #e9e9e9;
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.25s ease;
+}
+
+.kinetic-btn input:checked + span {
+    background: var(--OneColor);
+    border-color: var(--OneColor);
+    color: #fff;
+    box-shadow: 0px 5px 14px rgba(197, 37, 44, 0.45);
+    transform: scale(1.05);
+}
+
+.kinetic-btn span:hover {
+    background: #dcdcdc;
+}
+
+/* Zone affichage graphique */
+.kinetic-graph-area {
+    width: 100%;
+    height: 420px;
+    background: radial-gradient(circle at center, #ffffff 0%, #ececec 100%);
+    border: 1px solid #d2d2d2;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: border 0.3s ease;
+}
+
+.kinetic-graph-area:hover {
+    border-color: var(--OneColor);
+}
+
+/* Texte placeholder */
+.kinetic-placeholder-text {
+    font-size: 1.15rem;
+    font-weight: 500;
+    opacity: 0.55;
+    color: #444;
+    animation: blink 1.2s infinite alternate ease-in-out;
+}
+
+@keyframes blink {
+    from { opacity: 0.35; }
+    to { opacity: 0.75; }
 }

@@ -101,6 +101,7 @@
     <div id="tabs-one" class="tab-bar" style="display:none;">
         <button class="tab-btn active" data-tab="tab-curves-one" data-i18n="tabs.curves">Courbes</button>
         <button class="tab-btn" data-tab="tab-pst-one" data-i18n="tabs.pst">PST</button>
+        <button class="tab-btn" data-tab="tab-kinetics-one">Cinétique</button>
     </div>
 
     <!-- ONGLET COURBES -->
@@ -198,6 +199,41 @@
         </div>
     </div>
 
+    <!-- ONGLET CINÉTIQUE — Analyse 1 essai -->
+    <div id="tab-kinetics-one" class="tab-content" style="display:none;">
+
+        <div class="tab-header">
+            <span>Cinétique – Forces au sol</span>
+            <button class="help-btn" data-help-id="kinetics">
+                <span class="material-icons-outlined">help_outline</span>
+            </button>
+        </div>
+
+        <div class="kinetic-card">
+
+            <!-- Sélecteur 2D / 3D -->
+            <div class="kinetic-mode-selector">
+                <label class="kinetic-btn">
+                    <input type="radio" name="kinetic-dim" value="2d" checked>
+                    <span>Vue 2D</span>
+                </label>
+
+                <label class="kinetic-btn">
+                    <input type="radio" name="kinetic-dim" value="3d">
+                    <span>Vue 3D</span>
+                </label>
+            </div>
+
+            <!-- Zone GRF -->
+            <div class="kinetic-graph-area" id="kinetic-graph-area">
+                <p class="kinetic-placeholder-text">Graphique en développement…</p>
+            </div>
+
+        </div>
+
+    </div>
+
+
   </div>
 
   <!-- ==================================================== -->
@@ -261,7 +297,9 @@
     <div id="tabs-compare" class="tab-bar" style="display:none;">
         <button class="tab-btn active" data-tab="tab-curves-compare" data-i18n="tabs.curves">Courbes</button>
         <button class="tab-btn" data-tab="tab-pst-compare" data-i18n="tabs.pst">PST</button>
+        <button class="tab-btn" data-tab="tab-kinetics-compare">Cinétique</button>
     </div>
+
 
     <!-- ONGLET COURBES COMPARAISON -->
     <div id="tab-curves-compare" class="tab-content" style="display:none;">
@@ -367,6 +405,43 @@
             </div>
         </div>
     </div>
+
+    <!-- ONGLET CINÉTIQUE — Comparaison -->
+    <div id="tab-kinetics-compare" class="tab-content" style="display:none;">
+
+        <div class="tab-header">
+            <span>Cinétique — Comparaison</span>
+            <button class="help-btn" data-help-id="kinetics">
+                <span class="material-icons-outlined">help_outline</span>
+            </button>
+        </div>
+
+        <div class="kinetic-card">
+
+            <!-- Sélecteur 2D / 3D -->
+            <div class="kinetic-mode-selector">
+                <label class="kinetic-btn">
+                    <input type="radio" name="kinetic-dim-compare" value="2d" checked>
+                    <span>Vue 2D</span>
+                </label>
+
+                <label class="kinetic-btn">
+                    <input type="radio" name="kinetic-dim-compare" value="3d">
+                    <span>Vue 3D</span>
+                </label>
+            </div>
+
+            <!-- Zone GRF comparaison -->
+            <div class="kinetic-graph-area" id="kinetic-graph-area-compare">
+                <p class="kinetic-placeholder-text">Graphique comparatif en développement…</p>
+            </div>
+        </div>
+
+    </div>
+
+
+    </div>
+
 
   </div>
 

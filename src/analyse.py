@@ -1,6 +1,5 @@
 import sys
 import json
-import math
 import pandas as pd
 import numpy as np
 import os
@@ -142,8 +141,8 @@ MODELES = {
 
 CORRECTION_FACTOR = {
     "cgm23": {
-        "R_Thigh": [-1, -1, 1],
-        "L_Thigh": [-1, 1, -1],
+        "R_Thigh": [-1, -1, -1],
+        "L_Thigh": [-1, 1, 1],
         "R_Shank": [1, -1, 1],
         "L_Shank": [1, 1, -1],
         "R_Foot": [-1, -1, -1],
@@ -279,6 +278,8 @@ def process(htr_path: str, trc_path: str, modele: str):
     # 9) PST
     PST_L_df, PST_R_df, pst_raw = compute_spatiotemporal_params(traj, heelstrike, toeoff, timestamp)
     PST_global = compute_global_PST(traj, heelstrike, PST_L_df, PST_R_df, timestamp)
+
+    
 
     # =====================================================
     # 10) PARAMÈTRES DISCRETS (ROM / FlexMax / Index)

@@ -63,6 +63,32 @@
     "walk_ratio": "walk_ratio"
   };
 
+  // Utilise toujours la version actuelle de window.formatNumber
+  function formatNumber(value) {
+    if (typeof window.formatNumber === "function") {
+      return window.formatNumber(value);   // celle du renderer
+    }
+    return value; // fallback brut si jamais non dispo
+  }
+
+  function refreshFormatting() {
+    if (window.UIState.currentPage === "page_one") {
+      if (window.currentPyOneResult) {
+        displayPST_one(window.currentPyOneResult);
+      }
+    } else if (window.UIState.currentPage === "page_compare") {
+      if (window.currentPyCompare1 && window.currentPyCompare2) {
+        displayPST_compare(
+          window.currentPyCompare1,
+          window.currentPyCompare2,
+          window.essai1Name,
+          window.essai2Name
+        );
+      }
+    }
+  }
+
+
 
 
 
@@ -389,7 +415,7 @@
 
     return `
       <div class="pst-graph-wrapper ${isOutOfNorm ? "out-of-norm" : ""}">
-        <div class="pst-value-text">${value.toFixed(2)}</div>
+        <div class="pst-value-text">${formatNumber(value)}</div>
         <div class="pst-mini-graph">
           <div class="pst-bar-bg"></div>
           <div class="pst-norm-bar"
@@ -398,8 +424,8 @@
               style="left:${pos}%; background:${cursorColor};"></div>
         </div>
         <div class="pst-norm-text">
-          <span>${min.toFixed(2)}</span>
-          <span>${max.toFixed(2)}</span>
+          <span>${formatNumber(min)}</span>
+          <span>${formatNumber(max)}</span>
         </div>
       </div>
     `;
@@ -434,9 +460,9 @@
         <tr>
           <td><strong>${label}</strong></td>
           <td>
-            <span class="value-mean">${mean.toFixed(2)}</span>
+            <span class="value-mean">${formatNumber(mean)}</span>
             <span>±</span>
-            <span class="value-sd">${sd.toFixed(2)}</span>
+            <span class="value-sd">${formatNumber(sd)}</span>
           </td>
           <td>${createMiniGraph(mean, key)}</td>
         </tr>
@@ -475,7 +501,7 @@
       globalHtml += `
         <tr>
           <td><strong>${label}</strong></td>
-          <td><span class="value-mean">${g[key].toFixed(2)}</span></td>
+          <td><span class="value-mean">${formatNumber(g[key])}</span></td>
           <td>${miniGraph}</td>
         </tr>
       `;
@@ -508,17 +534,23 @@
 
 
     // --- Helpers internes ---
-    const deltaCell = (v1, v2) => {
-      const d = (v2 - v1).toFixed(2);
-      if (d > 0) return `<span class="val-better">+${d}</span>`;
-      if (d < 0) return `<span class="val-worse">${d}</span>`;
-      return `<span class="val-equal">0.00</span>`;
-    };
+    // --- Helpers internes ---
+    function deltaCell(v1, v2) {
+      const delta = v2 - v1;
+      const d = formatNumber(delta);
 
-    const boldIfHigher = (v, compareTo) =>
-      v >= compareTo
-        ? `<span class="pst-bold">${v}</span>`
-        : v.toFixed(2);
+      if (delta > 0) return `<span class="val-better">+${d}</span>`;
+      if (delta < 0) return `<span class="val-worse">${d}</span>`;
+      return `<span class="val-equal">0</span>`;
+    }
+
+    function boldIfHigher(v, compareTo) {
+      return v >= compareTo
+        ? `<span class="pst-bold">${formatNumber(v)}</span>`
+        : `<span>${formatNumber(v)}</span>`;
+    }
+
+
 
 
   // -----------------------------------------------------------
@@ -555,12 +587,14 @@
     const mini2 = normKey ? createMiniGraph(v2, normKey, true) : "";
 
     const v1Html = v1 >= v2
-      ? `<strong>${v1.toFixed(2)}</strong>`
-      : v1.toFixed(2);
+      ? `<strong>${formatNumber(v1)}</strong>`
+      : `<span>${formatNumber(v1)}</span>`;
 
     const v2Html = v2 >= v1
-      ? `<strong>${v2.toFixed(2)}</strong>`
-      : v2.toFixed(2);
+      ? `<strong>${formatNumber(v2)}</strong>`
+      : `<span>${formatNumber(v2)}</span>`;
+
+
 
     g += `
       <tr>
@@ -665,10 +699,12 @@
     initHeaders,
     displayPST_one,
     displayPST_compare,
+    refreshFormatting, // <-- Ajouter ici !
     PST_LABEL_KEYS,
     PST_HEADERS,
     PST_ORDER,
     PST_ORDER_R
   };
+
 
 })(window);

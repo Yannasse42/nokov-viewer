@@ -8,7 +8,12 @@
 
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+
+    "py:clean": "if exist extra\\analyse rmdir /S /Q extra\\analyse & mkdir extra\\analyse",
+
+    "py:build": "npm run py:clean && pyinstaller --onefile --name analyse --paths src --add-data \"src/Gait_Joint_Angle_Normative_Data.csv;.\" src/analyse.py && copy /Y dist\\analyse.exe extra\\analyse\\",
+
+    "dist": "npm run py:build && electron-builder"
   },
 
   "dependencies": {
@@ -28,15 +33,23 @@
     "productName": "Nokov Viewer",
 
     "files": [
+      "!dist/",
+      "!build/",
+      "!venv/",
+      "!.venv/",
+      "!*.spec",
+      "!**/__pycache__",
+      "!**/*.log",
+      "!README.md",
       "**/*"
     ],
 
     "extraResources": [
-      { "from": "src/Gait_Joint_Angle_Normative_Data.csv", "to": "Gait_Joint_Angle_Normative_Data.csv" },
-      { "from": "src/analyse.py", "to": "analyse.py" },
-      { "from": "src/nokov.py", "to": "nokov.py" },
-      { "from": "src/func.py", "to": "func.py" },
-      { "from": "src", "to": "src" }
+      {
+        "from": "extra/analyse",
+        "to": "analyse",
+        "filter": ["**/*"]
+      }
     ],
 
     "directories": {
