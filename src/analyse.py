@@ -27,56 +27,90 @@ def debug(*args):
     print(*args, file=sys.stderr)
 
 # 📦 Lecture des courbes normatives
+# 📦 Lecture des courbes normatives (CSV version)
 def load_normative_curves():
-    excel_path = os.path.join(os.path.dirname(__file__), "Gait_Joint_Angle_Normative_Data.xlsx")
-    df = pd.read_excel(excel_path)
+    base = os.path.dirname(__file__)
 
-    normative = {
-        "Hip": {
-            "sagittal": {
-                "mean": df["Hip Sagittal mean"].tolist(),
-                "std": df["Hip Sagittal SD"].tolist()
+    # 📌 Tentative 1 → CSV à côté du script
+    csv_path = os.path.join(base, "Gait_Joint_Angle_Normative_Data.csv")
+
+    # 📌 Tentative 2 → CSV dans /src
+    if not os.path.exists(csv_path):
+        csv_path = os.path.join(base, "src", "Gait_Joint_Angle_Normative_Data.csv")
+
+    # 📌 Si toujours pas trouvé → on désactive les normes
+    if not os.path.exists(csv_path):
+        debug(f"❌ Normative CSV not found: {csv_path}")
+        return None
+
+    debug(f"📄 Normative CSV loaded: {csv_path}")
+
+    df = pd.read_csv(csv_path, sep=";", decimal=",", encoding="utf-8", engine="python")
+    df.columns = df.columns.str.strip()
+
+
+    debug("===== CSV COLUMN CHECK =====")
+    debug(f"Columns detected: {list(df.columns)}")
+    debug(f"Shape: {df.shape}")
+    debug(df.head().to_string())
+    debug("============================")
+
+
+    # 🧠 Construction du dictionnaire des normes
+    try:
+        normative = {
+            "Hip": {
+                "sagittal": {
+                    "mean": df["Hip Sagittal mean"].tolist(),
+                    "std": df["Hip Sagittal SD"].tolist()
+                },
+                "frontal": {
+                    "mean": df["Hip Frontal mean"].tolist(),
+                    "std": df["Hip Frontal SD"].tolist()
+                },
+                "transverse": {
+                    "mean": df["Hip Longitudinal mean"].tolist(),
+                    "std": df["Hip Longitudinal SD"].tolist()
+                }
             },
-            "frontal": {
-                "mean": df["Hip Frontal mean"].tolist(),
-                "std": df["Hip Frontal SD"].tolist()
+            "Knee": {
+                "sagittal": {
+                    "mean": df["Knee Sagittal mean"].tolist(),
+                    "std": df["Knee Sagittal SD"].tolist()
+                },
+                "frontal": {
+                    "mean": df["Knee Frontal mean"].tolist(),
+                    "std": df["Knee Frontal SD"].tolist()
+                },
+                "transverse": {
+                    "mean": df["Knee Longitudinal mean"].tolist(),
+                    "std": df["Knee Longitudinal SD"].tolist()
+                }
             },
-            "transverse": {
-                "mean": df["Hip Longitudinal mean"].tolist(),
-                "std": df["Hip Longitudinal SD"].tolist()
-            }
-        },
-        "Knee": {
-            "sagittal": {
-                "mean": df["Knee Sagittal mean"].tolist(),
-                "std": df["Knee Sagittal SD"].tolist()
-            },
-            "frontal": {
-                "mean": df["Knee Frontal mean"].tolist(),
-                "std": df["Knee Frontal SD"].tolist()
-            },
-            "transverse": {
-                "mean": df["Knee Longitudinal mean"].tolist(),
-                "std": df["Knee Longitudinal SD"].tolist()
-            }
-        },
-        "Ankle": {
-            "sagittal": {
-                "mean": df["Ankle Sagittal mean"].tolist(),
-                "std": df["Ankle Sagittal SD"].tolist()
-            },
-            "frontal": {
-                "mean": df["Ankle Frontal mean"].tolist(),
-                "std": df["Ankle Frontal SD"].tolist()
-            },
-            "transverse": {
-                "mean": df["Ankle Longitudinal mean"].tolist(),
-                "std": df["Ankle Longitudinal SD"].tolist()
+            "Ankle": {
+                "sagittal": {
+                    "mean": df["Ankle Sagittal mean"].tolist(),
+                    "std": df["Ankle Sagittal SD"].tolist()
+                },
+                "frontal": {
+                    "mean": df["Ankle Frontal mean"].tolist(),
+                    "std": df["Ankle Frontal SD"].tolist()
+                },
+                "transverse": {
+                    "mean": df["Ankle Longitudinal mean"].tolist(),
+                    "std": df["Ankle Longitudinal SD"].tolist()
+                }
             }
         }
-    }
 
+    except KeyError as e:
+        debug(f"⚠️ ERROR normative column missing: {e}")
+        return None
+
+    debug("📊 Normative curves loaded (CSV) ✔")
     return normative
+
+
 
 # ==========================================================
 #  Modèles biomécaniques & facteurs de correction
@@ -184,6 +218,52 @@ def process(htr_path: str, trc_path: str, modele: str):
         "Left": toe_off(traj["LToe"][axis], traj["LHeel"][axis], traj["pelvis"][axis]),
         "Right": toe_off(traj["RToe"][axis], traj["RHeel"][axis], traj["pelvis"][axis]),
     }
+
+    
+    def toeoff_percent_meanstd(heelstrike, toeoff):
+        """Retourne les Toe-Off en % du cycle + moyenne/STD par côté"""
+        result_pct = {"Left": [], "Right": []}
+        stats = {}
+
+        for side in ["Left", "Right"]:
+            hs = heelstrike[side]
+            to = toeoff[side]
+
+            for val in to:
+                hs_before = hs[hs <= val]
+                hs_after = hs[hs > val]
+                if len(hs_before) == 0 or len(hs_after) == 0:
+                    continue
+
+                hs_start = hs_before[-1]
+                hs_next = hs_after[0]
+                percent = (val - hs_start) / (hs_next - hs_start) * 100
+                result_pct[side].append(float(round(percent, 2)))
+
+            arr = result_pct[side]
+            if len(arr) > 0:
+                stats[side] = {
+                    "mean": float(np.mean(arr)),
+                    "std": float(np.std(arr))
+                }
+            else:
+                stats[side] = {"mean": None, "std": None}
+
+        return result_pct, stats
+
+
+    # === Appel ===
+    toeoff_pct, toeoff_stats = toeoff_percent_meanstd(heelstrike, toeoff)
+
+    # === Debug console ===
+    debug("\nToe-Off en % du cycle :")
+    debug(f"Left  : {toeoff_pct['Left']}")
+    debug(f"Right : {toeoff_pct['Right']}")
+    debug("\nToe-Off Moyennés :")
+    debug(f"Left  => mean: {toeoff_stats['Left']['mean']:.2f} %, std: {toeoff_stats['Left']['std']:.2f}")
+    debug(f"Right => mean: {toeoff_stats['Right']['mean']:.2f} %, std: {toeoff_stats['Right']['std']:.2f}")
+
+
 
     # 7) Cycles
     cycle_L, cycle_R = cycle(heelstrike, angleData)
@@ -326,26 +406,25 @@ def process(htr_path: str, trc_path: str, modele: str):
         return {k: [float(v[0]), float(v[1])] for k, v in p.items()}
     
     normative_curves = None
+
     if static_used:
-        debug("📚 Chargement des courbes normatives (Hip / Knee / Ankle)")
-        normative_curves = load_normative_curves()
+        debug("📚 Static détecté → tentative de chargement des normes…")
 
-        debug("\n================= NORMATIVE CURVES LOADED =================")
-        for joint, planes in normative_curves.items():
-            debug(f"\n--- {joint.upper()} ---")
-            for plane, stats in planes.items():
-                debug(f"{plane.capitalize()} -> "
-                    f"Mean length: {len(stats['mean'])}, "
-                    f"STD length: {len(stats['std'])}")
-                
-                # Print first 5 values for quick check
-                debug(f"Sample Mean: {stats['mean'][:5]}")
-                debug(f"Sample STD : {stats['std'][:5]}")
+        try:
+            normative_curves = load_normative_curves()
 
-        debug("==========================================================\n")
+            if normative_curves is None:
+                debug("⚠ Normes non trouvées → analyse sans courbes normatives")
+            else:
+                debug("✅ Normes chargées avec succès")
+
+        except Exception as e:
+            debug(f"⚠ Erreur lors du chargement des normes : {e}")
+            debug("⛔ Passage en mode SANS NORMES")
+            normative_curves = None
 
     else:
-        debug("🚫 Pas de static → pas de courbes normatives affichées")
+        debug("🚫 Pas de static → pas de courbes normatives utilisées")
 
     return {
         "htr_file": htr_path,
@@ -371,6 +450,9 @@ def process(htr_path: str, trc_path: str, modele: str):
         "kinematic_R_meanstd": kinematic_R_stats,
 
         "normative_curves": normative_curves,
+
+        "toeoff_percent": toeoff_pct,
+        "toeoff_meanstd": toeoff_stats,
     }
 
 # ==========================================================

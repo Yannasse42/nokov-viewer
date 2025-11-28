@@ -24,7 +24,13 @@
     red1: "rgba(180, 0, 0, 1)", red1_fill: "rgba(180, 0, 0, 0.25)",
     red2: "rgba(255, 80, 80, 1)", red2_fill: "rgba(255, 80, 80, 0.25)",
     green1: "rgba(0, 140, 0, 1)", green1_fill: "rgba(0, 140, 0, 0.25)",
-    green2: "rgba(120, 220, 120, 1)", green2_fill: "rgba(120, 220, 120, 0.25)"
+    green2: "rgba(120, 220, 120, 1)", green2_fill: "rgba(120, 220, 120, 0.25)",
+
+    // ---- Toe-Off ----
+    L1: "rgb(255, 0, 0)",
+    L2: "rgb(255, 120, 120)",
+    R1: "rgb(0, 180, 0)",
+    R2: "rgb(120, 230, 120)"
   };
 
   // ==============================================================
@@ -139,11 +145,11 @@
           labels: {
             filter: (item) => {
               const txt = item.text.toLowerCase();
-              // On masque :
-              //  - "lower"  (les datasets de base pour le fill)
-              //  - "norm" EXACT (la courbe basse invisible)
-              return txt !== "norm" && !txt.includes("lower");
-            }
+              if (txt.trim() === "") return false;     // ⛔ masque les labels vides (Toe-Off)
+              if (txt === "norm") return false;
+              if (txt.includes("lower")) return false;
+              return true;
+            }            
           }
         },
         title: {
@@ -232,6 +238,32 @@
     }
   }
 
+  function addToeOffMarkers(datasets, pyData, side, trialIndex) {
+    const stats = pyData?.toeoff_meanstd?.[side === "L" ? "Left" : "Right"];
+    if (!stats || stats.mean == null) return;
+  
+    const xIndex = Math.round(Math.min(100, Math.max(0, stats.mean)));
+  
+    const color =
+      side === "L"
+        ? (trialIndex === 1 ? COLORS.L2 : COLORS.L1)
+        : (trialIndex === 1 ? COLORS.R2 : COLORS.R1);
+  
+    datasets.push({
+      label: "",
+      toeOff: { xIndex, color },
+      hidden: true,        // ne participe pas au layout
+      pointRadius: 0,
+      borderWidth: 0,
+      showLine: false,
+      legend: { display: false } // 🔥 masque toute légende associée
+    });
+        
+  }
+  
+  
+  
+
   // =========================================================================
   //  🔸 Fonctions généralisées de création des graphes
   // =========================================================================
@@ -246,6 +278,7 @@
 
     const datasets = [];
     addNormativeBand(datasets, py, joint, currentPlane);
+    addToeOffMarkers(datasets, py, side);
 
     const x = [...Array(101).keys()];
     const isLeft = side === "L";
@@ -294,6 +327,9 @@
 
     const datasets = [];
     addNormativeBand(datasets, py1, joint, currentPlane);
+    addToeOffMarkers(datasets, py1, side);
+    addToeOffMarkers(datasets, py2, side);
+
 
     const x = [...Array(101).keys()];
     const isLeft = side === "L";
@@ -315,6 +351,34 @@
       options: chartOptions(joint, side)
     });
   }
+
+  Chart.register({
+    id: 'toeoff-line-plugin',
+    afterDatasetDraw(chart) {
+      const yScale = chart.scales.y;
+      const xScale = chart.scales.x;
+  
+      chart.data.datasets.forEach(ds => {
+        if (!ds.toeOff) return;
+  
+        const x = xScale.getPixelForValue(ds.toeOff.xIndex);
+        const color = ds.toeOff.color;
+  
+        const top = yScale.top;
+        const bottom = yScale.bottom;
+  
+        chart.ctx.save();
+        chart.ctx.beginPath();
+        chart.ctx.strokeStyle = color;
+        chart.ctx.lineWidth = 3;
+        chart.ctx.moveTo(x, top);
+        chart.ctx.lineTo(x, bottom);
+        chart.ctx.stroke();
+        chart.ctx.restore();
+      });
+    }
+  });
+  
 
   // ==============================================================
   //  🔹 Export global

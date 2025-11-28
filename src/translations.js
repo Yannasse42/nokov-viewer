@@ -378,30 +378,28 @@ const translations = {
 
 
             pst_radar_intro: `
-                <h4>Radar PST — Profil locomoteur</h4>
+                <h4>Radar PST — Profil clinique</h4>
 
                 <p>
-                    Permet une lecture rapide :
+                Chaque axe représente un paramètre spatio-temporel de la marche
+                (foulée, appui, oscillation, base de support…).
                 </p>
-                <ul class="help-list">
-                    <li><strong>Symétrie gauche/droit</strong></li>
-                    <li><strong>Écart à la zone normative</strong></li>
-                    <li><strong>Progression entre essais</strong> (mode comparaison)</li>
-                </ul>
 
-                <p>
-                    Interprétation :
-                </p>
+                <p>Lecture :</p>
                 <ul class="help-list">
-                    <li>Dans la <strong>zone grisée</strong> → physiologique</li>
-                    <li>Au-delà → performance ↑ ou compensation</li>
-                    <li>En-deçà → déficit fonctionnel</li>
+                <li><strong>Zone grise</strong> = zone de normalité</li>
+                <li><strong>Au centre</strong> = valeur dans la norme</li>
+                <li><strong>Vers l’extérieur</strong> = valeur plus élevée que la norme</li>
+                <li><strong>Vers l’intérieur</strong> = valeur plus faible que la norme</li>
+                <li><strong>Polygones superposés</strong> = bonne symétrie G/D</li>
+                <li><strong>Déformation</strong> = compensation ou trouble spécifique sur un paramètre</li>
                 </ul>
 
                 <div class="help-note">
-                    Objectif rééducation : polygones plus
-                    <strong>ronds, grands et symétriques</strong>.
+                But clinique : un polygone <strong>régulier</strong>, <strong>centré</strong> et
+                <strong>symétrique</strong> entre les deux côtés.
                 </div>
+
             `,
 
             kinematic_intro: `
@@ -418,7 +416,7 @@ const translations = {
                     </li>
                     <li>
                         <strong>Phase du pic</strong> (% GC) :
-                        moment du pic → coordination du geste
+                        index du pic → coordination du geste
                     </li>
                     <li>
                         <strong>Amplitude articulaire (RoM)</strong> :
@@ -797,29 +795,29 @@ const translations = {
                 </div>
             `,
             pst_radar_intro: `
-                <h4>STP Radar — Locomotor profile</h4>
-
+                <h4>PST Radar — Clinical gait profile</h4>
+                
                 <p>
-                    Provides a fast visual interpretation of:
+                Each axis represents a spatiotemporal gait parameter
+                (stride, support phase, swing phase, base of support…).
                 </p>
+                
+                <p>How to read:</p>
                 <ul class="help-list">
-                    <li><strong>Left/Right symmetry</strong></li>
-                    <li><strong>Deviation from the normative range</strong></li>
-                    <li><strong>Evolution between trials</strong> (comparison mode)</li>
+                <li><strong>Grey zone</strong> = normative range</li>
+                <li><strong>Closer to the centre</strong> = within normal range</li>
+                <li><strong>Further outward</strong> = higher-than-normal value</li>
+                <li><strong>Further inward</strong> = lower-than-normal value</li>
+                <li><strong>Overlapping polygons</strong> = good left/right symmetry</li>
+                <li><strong>Shape distortion</strong> = compensation or specific gait issue</li>
                 </ul>
-
-                <p>Interpretation:</p>
-                <ul class="help-list">
-                    <li>Inside the <strong>grey zone</strong> → physiological</li>
-                    <li>Outside → increased performance or compensation</li>
-                    <li>Below → functional deficit</li>
-                </ul>
-
+                
                 <div class="help-note">
-                    Rehabilitation goal: 
-                    <strong>larger, smoother and more symmetric</strong> shapes.
+                Clinical goal: a <strong>regular</strong>, <strong>centered</strong> and
+                <strong>symmetrical</strong> polygon.
                 </div>
             `,
+            
 
             kinematic_intro: `
                 <h4>Discrete kinematic parameters</h4>
@@ -830,7 +828,7 @@ const translations = {
 
                 <ul class="help-list">
                     <li><strong>Peak angle</strong> – max amplitude → flexibility / stiffness</li>
-                    <li><strong>Peak timing</strong> (%GC) – moment of peak → coordination</li>
+                    <li><strong>Peak timing</strong> (%GC) – index of peak → coordination</li>
                     <li><strong>Range of Motion (RoM)</strong> – overall functional excursion</li>
                 </ul>
 
@@ -1202,26 +1200,28 @@ const translations = {
             `,
 
             pst_radar_intro: `
-                <h4>STP 雷达图 — 步态概况</h4>
-
-                <p>用于快速判断：</p>
+                <h4>STP 雷达图 — 临床步态特征</h4>
+                
+                <p>
+                每个轴代表一个步态时空参数
+                （步幅、支撑期、摆动期、支撑基底……）。
+                </p>
+                
+                <p>解读方式：</p>
                 <ul class="help-list">
-                    <li><strong>左右对称性</strong></li>
-                    <li><strong>与标准范围的偏差</strong></li>
-                    <li><strong>两次测试变化</strong>（对比模式）</li>
+                <li><strong>灰色区域</strong> = 正常范围</li>
+                <li><strong>接近中心</strong> = 参数接近正常</li>
+                <li><strong>向外偏离</strong> = 数值高于正常（可能为代偿）</li>
+                <li><strong>向内偏离</strong> = 数值低于正常（可能为功能不足）</li>
+                <li><strong>左右图形重叠</strong> = 对称性良好</li>
+                <li><strong>图形变形</strong> = 可能存在特定步态问题</li>
                 </ul>
-
-                <p>解读要点：</p>
-                <ul class="help-list">
-                    <li><strong>灰区内</strong> → 生理正常</li>
-                    <li><strong>灰区外</strong> → 性能提升或代偿</li>
-                    <li><strong>明显偏低</strong> → 功能受损</li>
-                </ul>
-
+                
                 <div class="help-note">
-                    康复目标：图形更<strong>圆</strong>、更<strong>大</strong>、更<strong>对称</strong>。
+                康复目标：图形 <strong>居中</strong>、<strong>规则</strong>、<strong>左右对称</strong>。
                 </div>
             `,
+                
 
             kinematic_intro: `
                 <h4>离散运动学参数</h4>
@@ -1230,7 +1230,7 @@ const translations = {
 
                 <ul class="help-list">
                     <li><strong>角度峰值</strong> — 最大幅度 → 灵活性 / 僵硬程度</li>
-                    <li><strong>峰值时序 (%GC)</strong> — 协调能力指标</li>
+                    <li><strong>峰值时序</strong>（%步态周期）— 峰值出现的时间，用于反映协调性</li>
                     <li><strong>活动范围 (RoM)</strong> — 功能利用程度</li>
                 </ul>
 

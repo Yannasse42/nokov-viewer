@@ -300,21 +300,37 @@ ipcMain.handle("run-python", async (_, args) => {
     });
 
     let stdout = "";
+    let stderr_data = "";
 
     py.stdout.on("data", data => stdout += data.toString());
-    py.stderr.on("data", data => console.error("[PYTHON ERR]:", data.toString()));
 
-    py.on("close", () => {
+    // 🔥 Logs Python visibles dans DevTools
+    py.stderr.on("data", data => {
+      const message = data.toString();
+      stderr_data += message;
+      console.error("[PYTHON ERR]:", message);
+    });
+
+    py.on("close", code => {
+      console.log("PYTHON EXIT CODE:", code);
+
+      if (stderr_data) console.log("FULL STDERR LOG:", stderr_data);
+
+      if (code !== 0) return reject(`Python exit code ${code}`);
+
       if (!stdout.trim()) return reject("Python n’a rien renvoyé.");
 
-      try { resolve(JSON.parse(stdout)); }
-      catch (e) {
-        console.log("RAW PYTHON:", stdout);
-        reject("JSON invalide.");
+      try {
+        resolve(JSON.parse(stdout));
+      } catch (e) {
+        console.log("RAW PYTHON OUT:", stdout);
+        return reject("JSON invalide — voir stderr.");
       }
     });
+
   });
 });
+
 
 // ============================================================================
 // 11) IPC — Vérifier si dossier existe
