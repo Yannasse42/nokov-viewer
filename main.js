@@ -254,26 +254,39 @@ ipcMain.handle("select-folder", async () => {
 
 
 // ============================================================================
-// 7) IPC — DÉTECTION FICHIERS HTR/TRC
+// 7) IPC — DÉTECTION FICHIERS HTR / TRC / FORCE + LOG
 // ============================================================================
 ipcMain.handle("detect-files", async (_, folderPath) => {
   try {
+    console.log("🔍 Analyse du dossier :", folderPath);
+
     const files = await fs.promises.readdir(folderPath);
+    console.log("📂 Fichiers trouvés :", files);
 
     const htr = files.find(f => f.toLowerCase().endsWith(".htr"));
     const trc = files.find(f => f.toLowerCase().endsWith(".trc"));
+    const force = files.find(f =>
+      f.toLowerCase().endsWith(".force") ||
+      (f.toLowerCase().includes("force") &&
+        (f.toLowerCase().endsWith(".csv") || f.toLowerCase().endsWith(".txt")))
+    );
+
+    console.log("🎯 Résultat détection :");
+    console.log("  HTR   :", htr ? htr : "❌ Aucun");
+    console.log("  TRC   :", trc ? trc : "❌ Aucun");
+    console.log("  FORCE :", force ? force : "❌ Aucun");
 
     return {
-      htr: htr ? path.join(folderPath, htr) : null,
-      trc: trc ? path.join(folderPath, trc) : null
+      htr:   htr   ? path.join(folderPath, htr) : null,
+      trc:   trc   ? path.join(folderPath, trc) : null,
+      force: force ? path.join(folderPath, force) : null
     };
 
   } catch (err) {
-    console.error("Erreur lecture dossier:", err);
-    return { htr: null, trc: null, error: err.message };
+    console.error("❌ Erreur pendant la détection :", err);
+    return { htr: null, trc: null, force: null, error: err.message };
   }
 });
-
 
 
 // ============================================================================
@@ -338,6 +351,8 @@ ipcMain.handle("run-python", async (_, args) => {
 
     console.log("RUN PY:", pythonExec, pyArgs);
 
+    if (args.force) console.log("➡️ FORCE SENT TO PYTHON:", args.force);
+
     const py = spawn(pythonExec, pyArgs, {
       windowsHide: true
     });
@@ -357,18 +372,38 @@ ipcMain.handle("run-python", async (_, args) => {
       if (stderr_data) console.log("FULL STDERR LOG:", stderr_data);
 
       if (code !== 0) return reject(`Python exit code ${code}`);
-
       if (!stdout.trim()) return reject("Python n’a rien renvoyé.");
 
       try {
-        resolve(JSON.parse(stdout));
+        const parsed = JSON.parse(stdout);
+
+        console.log("========== PYTHON RESULT KEYS ==========");
+        console.log(Object.keys(parsed));
+
+        if (parsed.force) {
+          console.log("========== GRF DETAILS ==========");
+          console.log("Force keys:", Object.keys(parsed.force));
+          console.log("Sample count:", parsed.force.Fz?.length || 0);
+        }
+
+        if (parsed.pst_global) {
+          console.log("========== PST GLOBAL ==========");
+          console.log(parsed.pst_global);
+        }
+
+        console.log("===================================");
+
+        resolve(parsed);
+
       } catch (e) {
         console.log("RAW PYTHON OUT:", stdout);
         reject("JSON invalide !");
       }
+
     });
   });
 });
+
 
 
 

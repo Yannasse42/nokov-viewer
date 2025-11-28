@@ -338,6 +338,64 @@ def process(htr_path: str, trc_path: str, modele: str):
     debug("======================================================\n")
 
     # =====================================================
+    # FORCE FILE READER — Auto-detect separator & columns
+    # =====================================================
+    force_data = None
+    force_path = args.get("force")
+
+    if force_path and os.path.exists(force_path):
+        try:
+            # On lit les 10 premières lignes pour détecter format
+            with open(force_path, "r", encoding="utf-8") as f:
+                head = "".join([next(f) for _ in range(10)])
+
+            sep = ";" if ";" in head else "\t"
+            skip = 4  # généralement 4 lignes de header Nokov
+
+            df_force = pd.read_csv(force_path, sep=sep, skiprows=skip, engine="python")
+            df_force.columns = df_force.columns.str.strip()
+
+            debug(f"📊 FORCE loaded: {force_path}")
+            debug(f"Columns: {list(df_force.columns)}")
+
+            # On normalise uniquement si masse détectée (sinon BW=1)
+            BW = 1.0
+
+            force_data = {}
+
+            # Recherche colonnes connues
+            mapping = {
+                "Fx": ["Fx", "Fx (N)", "FX1"],
+                "Fy": ["Fy", "Fy (N)", "FY1"],
+                "Fz": ["Fz", "Fz (N)", "FZ1"],
+                "COPx": ["COPx", "COPx (mm)", "X1"],
+                "COPy": ["COPy", "COPy (mm)", "Y1"],
+            }
+
+            for key, possible_names in mapping.items():
+                for name in possible_names:
+                    if name in df_force:
+                        force_data[key] = df_force[name].tolist()
+                        break
+
+            debug(f"🟢 FORCE parsed keys: {list(force_data.keys())}")
+            # 🔎 Show preview of first 30 rows of detected force columns
+            if force_data:
+                debug("\n===== GRF — FIRST 30 ROWS PER KEY =====")
+                for key, values in force_data.items():
+                    debug(f"\n--- {key} (first 30) ---")
+                    preview = values[:30]
+                    debug(", ".join(str(v) for v in preview))
+                debug("===========================================\n")
+
+
+        except Exception as e:
+            debug(f"❌ Error loading force file: {e}")
+
+    else:
+        debug("🚫 No force file provided or not found")
+
+    # =====================================================
     #  JSON FINAL (STDOUT — propre)
     # =====================================================
 
@@ -427,6 +485,14 @@ def process(htr_path: str, trc_path: str, modele: str):
     else:
         debug("🚫 Pas de static → pas de courbes normatives utilisées")
 
+    # Calculo speed like Python plot uses
+    if force_data:
+        if "COPx" in force_data and "COPy" in force_data:
+            arr = np.column_stack((force_data["COPx"], force_data["COPy"]))
+            speed = np.linalg.norm(np.diff(arr, axis=0, prepend=arr[0:1]), axis=1) * 10
+            force_data["speed"] = speed.tolist()
+
+
     return {
         "htr_file": htr_path,
         "trc_file": trc_path,
@@ -454,6 +520,7 @@ def process(htr_path: str, trc_path: str, modele: str):
 
         "toeoff_percent": toeoff_pct,
         "toeoff_meanstd": toeoff_stats,
+        "force": force_data  # 🟢 Export des données force au JSON
     }
 
 # ==========================================================

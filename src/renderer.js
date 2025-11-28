@@ -260,6 +260,20 @@ function setupDropZone(inputElement) {
 // ============================================================================
 window.addEventListener("DOMContentLoaded", () => {
 
+    document.querySelectorAll('input[name="kinetic-dim"]').forEach(radio => {
+        radio.addEventListener("change", e => {
+            const container = "kinetic-graph-area";
+
+            if (e.target.value === "2d") {
+            Kinetics.setData(currentPyOneResult, essai1Name, container);
+            } else {
+            document.getElementById(container).innerHTML =
+                "<p class='kinetic-placeholder-text'>Vue 3D en développement…</p>";
+            }
+        });
+    });
+
+
     // ======================================================================
     // HELP MANAGER — aide contextuelle
     // ======================================================================
@@ -490,8 +504,12 @@ window.addEventListener("DOMContentLoaded", () => {
                   || window.electronAPI.basename(dossier);
 
         const pyResult = await window.electronAPI.runPython({
-            htr: files.htr, trc: files.trc, modele
+            htr: files.htr,
+            trc: files.trc,
+            modele,
+            force: files.force || null
         });
+
 
         currentPyOneResult = pyResult;   // <<< AJOUT ICI
 
@@ -501,6 +519,9 @@ window.addEventListener("DOMContentLoaded", () => {
         PST.displayPST_one(pyResult);
         Charts.setData(pyResult, null, essai1Name, "", "charts_one");
         renderKinematicSummary(pyResult, "sagittal");
+
+        // 🆕 CINETIQUE GRF SAGITTAL
+        Kinetics.setData(pyResult, essai1Name, "kinetic-graph-area");
 
 
         UIManager.showTabs("one");
@@ -551,11 +572,17 @@ window.addEventListener("DOMContentLoaded", () => {
                   || window.electronAPI.basename(d2);
 
         const py1 = await window.electronAPI.runPython({
-            htr: f1.htr, trc: f1.trc, modele: m1
+            htr: f1.htr,
+            trc: f1.trc,
+            modele: m1,
+            force: f1.force || null
         });
 
         const py2 = await window.electronAPI.runPython({
-            htr: f2.htr, trc: f2.trc, modele: m2
+            htr: f2.htr,
+            trc: f2.trc,
+            modele: m2,
+            force: f2.force || null
         });
 
         currentPyCompare1 = py1;
