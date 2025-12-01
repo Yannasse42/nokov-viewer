@@ -262,16 +262,48 @@ window.addEventListener("DOMContentLoaded", () => {
 
     document.querySelectorAll('input[name="kinetic-dim"]').forEach(radio => {
         radio.addEventListener("change", e => {
-            const container = "kinetic-graph-area";
-
-            if (e.target.value === "2d") {
-            Kinetics.setData(currentPyOneResult, essai1Name, container);
-            } else {
-            document.getElementById(container).innerHTML =
-                "<p class='kinetic-placeholder-text'>Vue 3D en développement…</p>";
-            }
+      
+          if (!currentPyOneResult) return;
+      
+          const kineticArea = document.getElementById("kinetic-graph-area");
+          if (!kineticArea) {
+            console.warn("⚠ kinetic-graph-area absent → switch ignoré");
+            return;
+          }
+      
+          // Toujours s’assurer que l’onglet cinétique est actif
+          const kineticTab = document.getElementById("tab-kinetics-one");
+          if (!kineticTab || kineticTab.style.display === "none") {
+            console.warn("⚠ Switch 2D/3D ignoré (onglet cinétique masqué)");
+            return;
+          }
+      
+          const is3D = (e.target.value === "3d");
+      
+          // RESET propre
+          kineticArea.innerHTML = "";
+      
+          if (!is3D) {
+            Kinetics.setData(currentPyOneResult, essai1Name, "kinetic-graph-area");
+            return;
+          }
+      
+          // 📌 Mode 3D
+          const container3D = document.createElement("div");
+          container3D.id = "grf-3d-container";
+          container3D.classList.add("grf-card", "grf-big");
+          kineticArea.appendChild(container3D);
+      
+          // On lance après append pour récupérer la vraie taille ! 🔥
+          requestAnimationFrame(() => {
+            Kinetics.addGRFVectorPlot3D("grf-3d-container");
+          });
         });
-    });
+      });
+      
+    
+      
+      
 
 
     // ======================================================================
@@ -520,8 +552,17 @@ window.addEventListener("DOMContentLoaded", () => {
         Charts.setData(pyResult, null, essai1Name, "", "charts_one");
         renderKinematicSummary(pyResult, "sagittal");
 
-        // 🆕 CINETIQUE GRF SAGITTAL
-        Kinetics.setData(pyResult, essai1Name, "kinetic-graph-area");
+        // 🆕 CINETIQUE GRF — UNIQUEMENT SI FORCE DISPONIBLE
+        if (pyResult.force && pyResult.force.Fz) {
+            const kineticArea = document.getElementById("kinetic-graph-area");
+            kineticArea.innerHTML = ""; // clean
+
+            Kinetics.setData(pyResult, essai1Name, "kinetic-graph-area");
+
+            console.log("📊 GRF data loaded ✔️");
+        } else {
+            console.warn("⚠️ No force plate data → CoP/GRF plots disabled");
+        }
 
 
         UIManager.showTabs("one");

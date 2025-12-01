@@ -1444,61 +1444,89 @@ canvas#pst-radar-canvas {
     background: #dcdcdc;
 }
 
-/* Zone affichage graphique */
-.kinetic-graph-area {
-    width: 100%;
-    height: 420px;
-    background: radial-gradient(circle at center, #ffffff 0%, #ececec 100%);
-    border: 1px solid #d2d2d2;
-    border-radius: var(--radius);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    transition: border 0.3s ease;
-}
-
-.kinetic-graph-area:hover {
-    border-color: var(--OneColor);
-}
-
-/* Texte placeholder */
-.kinetic-placeholder-text {
-    font-size: 1.15rem;
-    font-weight: 500;
-    opacity: 0.55;
-    color: #444;
-    animation: blink 1.2s infinite alternate ease-in-out;
-}
-
 @keyframes blink {
     from { opacity: 0.35; }
     to { opacity: 0.75; }
 }
 
-/* === GRF layout propre === */
+/* === Container général GRF === */
 .kinetic-graph-area {
-  width: 100%;
-  height: calc(100vh - 210px);
-  overflow-y: auto;
-  padding: 5px;
+    width: 100%;
+    margin-top: 20px;
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
 }
 
-.grf-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
-  grid-auto-rows: 260px;
-  gap: 12px;
-  width: 100%;
+
+/* === Layout par zones === */
+.grf-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-bottom: 25px;
 }
 
+/* Une seule colonne = graph plein écran */
+.grf-row.full-row {
+    grid-template-columns: 1fr;
+}
+
+/* === Carte graphique === */
 .grf-card {
-  background: #ffffff;
-  border-radius: 10px;
-  padding: 6px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px;
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+        0 4px 10px rgba(0,0,0,0.08),
+        0 1px 2px rgba(0,0,0,0.04);
 }
 
-.grf-card.span2 {
-  grid-column: span 2;
+.grf-row.full-row .grf-card {
+    height: 380px;
 }
+
+/* Mobile responsive */
+@media (max-width: 1100px) {
+    .grf-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .grf-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Hauteur du graphe 3D */
+#grf-3d-container {
+    width: 100%;
+    height: 500px;
+    border-radius: 12px;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Canvas WebGL plein format */
+#grf-3d-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+}
+
+
+/* Mobile 🎯 */
+@media (max-width: 768px) {
+    #grf-3d-container {
+        height: 360px;
+    }
+}
+
 
