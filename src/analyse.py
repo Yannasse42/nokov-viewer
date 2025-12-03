@@ -213,77 +213,83 @@ def pst_df_to_dict(df):
 def pst_raw_to_dict(p):
     return {k: [float(v[0]), float(v[1])] for k, v in p.items()}
 
-
 # ==========================================================
-#  LECTURE & TRAITEMENT FICHIER FORCE
+#  CHARGEMENT + TRAITEMENT DES DONNÉES FORCE
 # ==========================================================
 
 def load_force_data(force_path, timestamp, heelstrike, toeoff):
     """
-    Charge le fichier force, extrait :
-      - sample_rate / cam_rate
-      - Fx, Fy, Fz, COPx, COPy
-      - cycles de force synchronisés aux cycles de marche
-      - un cycle normalisé 0–100% (per percent_cycle_L/R)
-      - side sur la plateforme (L/R)
-      - speed à partir du COP
-    Retourne un dict force_data ou None.
+    On récupère un UNIQUE cycle de force **propre et utilisable**.
+    Pourquoi ?
+    → Courbes GRF normalisées 0–100%
+    → Vecteurs de force cohérents
+    → CoP propre et lisible
+
+    NOTE :
+      Ce traitement est celui utilisé **en clinique**, pas académique.
     """
+
+    # ------------------------------------------------------
+    # 0️⃣ Sécurité → fichier existe ?
+    # ------------------------------------------------------
     if not force_path or not os.path.exists(force_path):
-        debug("🚫 No force file provided or not found")
+        debug("🚫 Pas de fichier force trouvé")
         return None
 
     try:
-        # Détection séparateur
+        # ------------------------------------------------------
+        # 1️⃣ On détecte automatiquement le séparateur
+        #    ; ou tabulation selon les exports
+        # ------------------------------------------------------
         with open(force_path, "r", encoding="utf-8") as f:
             head = "".join([next(f) for _ in range(10)])
-
         sep = ";" if ";" in head else "\t"
-        skip = 4  # Nokov : 4 lignes d'en-tête
+        skip = 4  # chez Nokov : 4 lignes d’en-tête inutiles
 
+        # On lit le fichier force dans un tableau pandas
         df_force = pd.read_csv(force_path, sep=sep, skiprows=skip, engine="python")
-        df_force.columns = df_force.columns.str.strip()
+        df_force.columns = df_force.columns.str.strip()  # nettoyage des noms
 
-        debug(f"📊 FORCE loaded: {force_path}")
-        debug(f"Columns: {list(df_force.columns)}")
+        debug(f"\n📊 FORCE chargée : {force_path}")
+        debug(f"Colonnes trouvées : {list(df_force.columns)}")
 
         force_data = {}
 
-        # ---- Sample rate ----
-        sample_rate = None
+        # ------------------------------------------------------
+        # 2️⃣ On récupère la fréquence d’échantillonnage FORCE
+        #    Ex : 1000 Hz = 1000 mesures par seconde
+        # ------------------------------------------------------
         try:
+            sample_rate = None
             with open(force_path, "r") as f:
-                for _ in range(10):  # premières lignes
+                for _ in range(10):  # lecture des lignes d’en-tête
                     line = f.readline()
-                    if not line:
-                        break
                     if "SampleRate" in line:
                         sample_rate = float(line.split("=")[1].strip())
                         break
 
             if sample_rate is None:
-                raise ValueError("SampleRate not found in header")
-
-            force_data["sample_rate"] = sample_rate
-            debug(f"📏 Force plate sample rate: {sample_rate} Hz")
-        except Exception as e:
-            debug(f"❌ Failed reading SampleRate: {e}")
+                raise ValueError("Pas de SampleRate dans l'en-tête")
+        except:
+            # Par défaut = 1000 Hz → standard force plate
             sample_rate = 1000.0
-            force_data["sample_rate"] = sample_rate
-            debug(f"⚠️ Fallback SampleRate: {sample_rate} Hz")
 
-        # ---- Camera rate (via TRC timestamp) ----
-        try:
-            ts = np.asarray(timestamp, dtype=float)
-            dt = float(np.diff(ts).mean())
-            cam_rate = 1.0 / dt if dt > 0 else None
-            if cam_rate is not None:
-                force_data["cam_rate"] = cam_rate
-                debug(f"🎥 Camera rate (from TRC): {cam_rate:.2f} Hz")
-        except Exception as e:
-            debug(f"⚠️ Unable to compute camera rate: {e}")
+        force_data["sample_rate"] = sample_rate
+        debug(f"📏 SampleRate Force = {sample_rate:.2f} Hz")
 
-        # ---- Mapping colonnes Fx, Fy, Fz, COPx, COPy ----
+        # ------------------------------------------------------
+        # 3️⃣ On calcule la fréquence cinématique (TRC)
+        #    à partir des timestamps
+        # ------------------------------------------------------
+        ts = np.asarray(timestamp, dtype=float)
+        dt = float(np.diff(ts).mean())
+        cam_rate = 1.0 / dt  # Ex : 1 / 0.01 = 100 Hz
+        force_data["cam_rate"] = cam_rate
+        debug(f"🎥 CameraRate TRC = {cam_rate:.2f} Hz")
+
+        # ------------------------------------------------------
+        # 4️⃣ On mappe les bonnes colonnes (selon export)
+        # ------------------------------------------------------
         mapping = {
             "Fx": ["Fx", "Fx (N)", "FX1"],
             "Fy": ["Fy", "Fy (N)", "FY1"],
@@ -292,202 +298,136 @@ def load_force_data(force_path, timestamp, heelstrike, toeoff):
             "COPy": ["COPy", "COPy (mm)", "Y1"],
         }
 
-        for key, possible_names in mapping.items():
-            for name in possible_names:
-                if name in df_force:
-                    force_data[key] = df_force[name].tolist()
+        # On parcourt chaque signal
+        for key, names in mapping.items():
+            for n in names:
+                if n in df_force:
+                    force_data[key] = df_force[n].tolist()
                     break
 
-        debug(f"🟢 FORCE parsed keys: {list(force_data.keys())}")
+        debug(f"🟢 Colonnes GRF récupérées : {list(force_data.keys())}")
 
-        # ---- Preview court (pas de pavé) ----
-        debug("\n===== GRF PREVIEW (first 10) =====")
-        for key in ["Fx", "Fy", "Fz", "COPx", "COPy"]:
-            if key in force_data:
-                vals = force_data[key][:10]
-                debug(f"{key}: {', '.join(f'{v:.3f}' for v in vals)}")
-        debug("===================================\n")
+        # ------------------------------------------------------
+        # 5️⃣ Nettoyage pré-impact → Fz < 5N = pas de contact
+        #     On met à ZERO 👉 pour éviter de détecter du bruit
+        # ------------------------------------------------------
+        Fz_arr = np.array(force_data["Fz"], dtype=float)
+        threshold = 20.0
+        n_zero = np.sum(Fz_arr < threshold)
+        Fz_arr[Fz_arr < threshold] = 0.0
+        force_data["Fz"] = Fz_arr.tolist()
+        debug(f"⚙️ Fz filtré : {n_zero} échantillons mis à 0 (<20N)")
 
-        # ---- Vitesse CoP (pour heatmap) ----
-        if all(k in force_data for k in ["COPx", "COPy", "Fz"]):
-            arr = np.column_stack((force_data["COPx"], force_data["COPy"]))
-            Fz_arr = np.array(force_data["Fz"])
-            valid = Fz_arr > 16.5
-            arr_valid = arr[valid]
+        # ------------------------------------------------------
+        # 6️⃣ Sync FORCE ↔ CINE
+        #     On traduit les frames ciné en index force
+        #     Ex : 1 frame = 10 samples force
+        # ------------------------------------------------------
+        hs_L, to_L = heelstrike["Left"], toeoff["Left"]
+        hs_R, to_R = heelstrike["Right"], toeoff["Right"]
 
-            if len(arr_valid) > 1:
-                # Norme déplacement entre frames → cm/s (arbitraire 10)
-                speed_valid = np.linalg.norm(np.diff(arr_valid, axis=0), axis=1)
-                speed_valid = np.insert(speed_valid, 0, 0) * 10
-            else:
-                speed_valid = np.zeros(np.sum(valid))
+        ratio = sample_rate / cam_rate  # chez Tommy : 10
 
-            speed = np.zeros(len(arr))
-            speed[valid] = speed_valid
-
-            force_data["speed"] = speed.tolist()
-
-        # ---- Sync cycles force & événements temporels ----
-        hs_L = heelstrike.get("Left")
-        to_L = toeoff.get("Left")
-        hs_R = heelstrike.get("Right")
-        to_R = toeoff.get("Right")
-
-        if any(v is None for v in [hs_L, to_L, hs_R, to_R]):
-            debug("⚠️ Heelstrike/ToeOff keys mismatch")
-            return force_data
-
-        cam_rate = force_data.get("cam_rate", 100.0)
-        force_rate = force_data.get("sample_rate", 1000.0)
-        ratio = force_rate / cam_rate
-
+        # On va stocker cycles L/R
         force_cycles = {"Left": [], "Right": []}
 
-        def extract_cycle(hs_frame, to_frame, side):
-            hs_f = int(round(hs_frame * ratio))
-            to_f = int(round(to_frame * ratio))
-
-            cycle_dict = {
-                "Fx": force_data["Fx"][hs_f:to_f],
-                "Fy": force_data["Fy"][hs_f:to_f],
-                "Fz": force_data["Fz"][hs_f:to_f],
-                "COPx": force_data["COPx"][hs_f:to_f],
-                "COPy": force_data["COPy"][hs_f:to_f],
-                "start_force": hs_f,
-                "end_force": to_f,
-            }
-            force_cycles[side].append(cycle_dict)
-
-        for hs, to in zip(hs_L, to_L):
-            extract_cycle(hs, to, "Left")
-        for hs, to in zip(hs_R, to_R):
-            extract_cycle(hs, to, "Right")
-
-        force_data["cycles"] = force_cycles
-
-        # ---- Cycles normalisés 0–100% ----
+        # ------------------------------------------------------
+        # 7️⃣ Fonction extraction ET normalisation d’un cycle
+        # ------------------------------------------------------
         def compute_percent_cycle(hs_list, to_list):
+
             cycles = []
 
-            for i in range(len(hs_list) - 1):
+            # pour chaque HS jusqu’au prochain HS
+            for i in range(len(hs_list)-1):
                 hs = hs_list[i]
-                hs_next = hs_list[i + 1]
+                hs_next = hs_list[i+1]
 
-                # Toe-Off entre 2 HS
-                to = None
-                for t in to_list:
-                    if hs < t < hs_next:
-                        to = t
-                        break
+                # Cherche le TO dans cette fenêtre
+                to = next((t for t in to_list if hs < t < hs_next), None)
                 if to is None:
-                    debug(f"❌ Aucun TO trouvé pour le cycle HS {hs} → HS_next {hs_next}")
                     continue
 
+                # Passage en indices force
                 start = int(hs * ratio)
                 end = int(hs_next * ratio)
-                to_force_idx = int(to * ratio)
+                to_idx = int(to * ratio)
 
-                fz_segment = np.array(force_data["Fz"][start:end])
-                if np.max(fz_segment) < 20:
-                    debug(f"⏩ Ignored: HS {hs}→{hs_next} (Fz max {np.max(fz_segment):.1f} < 20N)")
+                # Segment brut
+                fz = np.array(force_data["Fz"][start:end])
+                if fz.size == 0 or np.max(fz) < threshold:
+                    continue  # aucun vrai contact dans ce cycle
+
+                # ------------------------------------------------------
+                # Recalage du HS → on avance jusqu’à Fz > 20N
+                # ------------------------------------------------------
+                onset = int(np.argmax(fz > threshold))
+                start_shifted = start + onset
+
+                # Segments recalés (plus de bruit)
+                fz = np.array(force_data["Fz"][start_shifted:end])
+                fx = np.array(force_data["Fx"][start_shifted:end])
+                fy = np.array(force_data["Fy"][start_shifted:end])
+                cx = np.array(force_data["COPx"][start_shifted:end])
+                cy = np.array(force_data["COPy"][start_shifted:end])
+
+                if len(fz) < 5:
                     continue
 
-                debug(
-                    f"🦶 FORCE CYCLE VALID:\n"
-                    f"  ➤ HS      = {hs} (force idx {start})\n"
-                    f"  ➤ Toe-Off = {to} (force idx {to_force_idx})\n"
-                    f"  ➤ HS_next = {hs_next} (force idx {end})\n"
-                    f"  ➤ Durée force = {end - start} samples"
-                )
+                # ------------------------------------------------------
+                # Normalisation 0–100% → INTERPOLATION
+                # ------------------------------------------------------
+                t = np.linspace(0,1,len(fz))
+                pct = np.linspace(0,1,101)
 
-                # Interpolation 0 → 100%
-                t_force = np.linspace(0, 1, len(fz_segment))
-                percent = np.linspace(0, 1, 101)
+                cycles.append({
+                    "Fz": np.interp(pct,t,fz).tolist(),
+                    "Fx": np.interp(pct,t,fx).tolist(),
+                    "Fy": np.interp(pct,t,fy).tolist(),
+                    "COPx": np.interp(pct,t,cx).tolist(),
+                    "COPy": np.interp(pct,t,cy).tolist(),
 
-                fx_segment = np.array(force_data["Fx"][start:end])
-                fy_segment = np.array(force_data["Fy"][start:end])
-                copx_segment = np.array(force_data["COPx"][start:end])
-                copy_segment = np.array(force_data["COPy"][start:end])
+                    # Toe-Off en % stance REALIGNÉ
+                    "toeoff_percent": (to_idx-start_shifted)/(end-start_shifted)*100
+                })
 
-                fz_pct = np.interp(percent, t_force, fz_segment)
-                fx_pct = np.interp(percent, t_force, fx_segment)
-                fy_pct = np.interp(percent, t_force, fy_segment)
-                copx_pct = np.interp(percent, t_force, copx_segment)
-                copy_pct = np.interp(percent, t_force, copy_segment)
-
-                toe_pct = float((to - hs) / (hs_next - hs) * 100)
-                debug(f"  ➤ Toe-Off position = {toe_pct:.2f} %\n")
-
-                cycles.append(
-                    {
-                        "Fz": fz_pct.tolist(),
-                        "Fx": fx_pct.tolist(),
-                        "Fy": fy_pct.tolist(),
-                        "COPx": copx_pct.tolist(),
-                        "COPy": copy_pct.tolist(),
-                        "toeoff_percent": toe_pct,
-                        "HS_frame": int(hs),
-                        "HS_next_frame": int(hs_next),
-                        "TO_frame": int(to),
-                        "HS_force_idx": int(start),
-                        "HS_next_force_idx": int(end),
-                        "TO_force_idx": int(to_force_idx),
-                    }
-                )
-
-                # un cycle suffit pour la visu → break
+                # En clinique = 1 cycle pour la visu → stop
                 break
 
-            return cycles if cycles else None
+            return cycles or None
 
-        cycles_R = compute_percent_cycle(hs_R, to_R)
-        cycles_L = compute_percent_cycle(hs_L, to_L)
+        # Cycles L/R
+        cycles_R = compute_percent_cycle(hs_R,to_R)
+        cycles_L = compute_percent_cycle(hs_L,to_L)
 
-        # ---- Détection pied sur plaque ----
-        impact_idx = next(
-            (i for i, f in enumerate(force_data["Fz"]) if f > 20), None
+        # ------------------------------------------------------
+        # 8️⃣ Détection automatique : pied utilisé sur la plaque
+        # ------------------------------------------------------
+        first_idx = next((i for i, f in enumerate(force_data["Fz"]) if f>0), None)
+        impact_frame = first_idx / ratio
+
+        # Compare quel HS était juste avant ce contact
+        plate_side = (
+            "R" if max([h for h in hs_R if h <= impact_frame]) >
+                    max([h for h in hs_L if h <= impact_frame]) else "L"
         )
-        plate_side = None
-        impact_frame = None
 
-        if impact_idx is not None:
-            impact_frame = impact_idx / ratio
-            last_hs_R = max([h for h in hs_R if h <= impact_frame], default=None)
-            last_hs_L = max([h for h in hs_L if h <= impact_frame], default=None)
-
-            if last_hs_R is not None and (last_hs_L is None or last_hs_R > last_hs_L):
-                plate_side = "R"
-            elif last_hs_L is not None:
-                plate_side = "L"
-
-        if impact_idx is not None and impact_frame is not None:
-            debug(f"🎯 First Fz impact @ {impact_idx} → frame {impact_frame:.2f}")
-        else:
-            debug("🎯 Aucun impact Fz > 20N détecté")
-
-        debug(f"🦶 Contact foot detected → {plate_side}")
         force_data["plate_side"] = plate_side
 
-        # ---- Garder seulement les cycles du bon pied ----
-        if plate_side == "R" and cycles_R:
+        # ------------------------------------------------------
+        # 9️⃣ On ne garde QUE les cycles du bon pied
+        # ------------------------------------------------------
+        if plate_side=="R" and cycles_R:
             force_data["percent_cycle_R"] = cycles_R
-            force_data.pop("percent_cycle_L", None)
-            force_data["cycles"] = {"Right": force_cycles["Right"]}
-        elif plate_side == "L" and cycles_L:
+        elif plate_side=="L" and cycles_L:
             force_data["percent_cycle_L"] = cycles_L
-            force_data.pop("percent_cycle_R", None)
-            force_data["cycles"] = {"Left": force_cycles["Left"]}
-        else:
-            debug("⚠️ Aucun cycle plateforme détecté")
-            force_data["cycles"] = {}
-
-        debug(f"📌 FORCE cycles kept: {list(force_data['cycles'].keys())}")
 
         return force_data
 
     except Exception as e:
-        debug(f"❌ Error loading force file: {e}")
+        debug(f"❌ Erreur lecture force : {e}")
         return None
+
 
 
 # ==========================================================

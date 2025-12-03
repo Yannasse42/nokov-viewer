@@ -219,38 +219,41 @@
     const card = createCard(container, true);
     const canvas = document.createElement("canvas");
     card.appendChild(canvas);
-
+  
     const Fy = data.Fy;
     const Fz = data.Fz;
-    const COPy = data.COPy; // mm
+    const COPy = data.COPy;
     const sampleRate = data.sample_rate || 100;
-
-    // Frames en contact (Fz > 16.5 N)
+  
     const stanceIdx = [];
     for (let i = 0; i < Fz.length; i++) {
       if (Fz[i] > 16.5) stanceIdx.push(i);
     }
-
-    if (!stanceIdx.length) {
-      console.warn("No stance samples for GRF vector plot");
-      return;
-    }
-
-    const redFactor = Math.max(1, Math.round(sampleRate / 20));
+    if (!stanceIdx.length) return;
+  
+    const first = stanceIdx[0];
+    const last = stanceIdx[stanceIdx.length - 1];
+    const dCoP = COPy[last] - COPy[first];
+  
+    const isNormal = dCoP > 0;
+    console.log(isNormal ? "→ Sens normal (pas inversé)" : "↩️ Sens inversé Auto");
+  
+    const redFactor = Math.max(1, Math.round(sampleRate / 50));
     const datasets = [];
-
+  
     for (let j = 0; j < stanceIdx.length; j += redFactor) {
       const i = stanceIdx[j];
-
-      // COP = ancrage du vecteur
-      const x0 = COPy[i];
+  
+      const cop = COPy[i] - 250;
+      const fy = Fy[i];
+      const fz = Fz[i];
+      const scale = 0.2;
+  
+      const x0 = isNormal ? cop : -cop;
+      const x1 = isNormal ? cop + fy * scale : -cop - fy * scale;
       const y0 = 0;
-
-      // Vecteur réel → direction = Fy / hauteur = Fz
-      const scale = 0.2; // Facteur visuel (ajustable)
-      const x1 = COPy[i] + Fy[i] * scale;
-      const y1 = Fz[i];
-
+      const y1 = fz;
+  
       datasets.push({
         type: "line",
         data: [
@@ -264,7 +267,13 @@
         _arrow: { size: 12, color: "#355474" }
       });
     }
-
+  
+    const minCOP = Math.min(...COPy) - 250;
+    const maxCOP = Math.max(...COPy) - 250;
+  
+    const xMin = isNormal ? minCOP - 50 : -maxCOP - 100;
+    const xMax = isNormal ? maxCOP + 100 : -minCOP + 50;
+  
     new Chart(canvas, {
       type: "scatter",
       data: { datasets },
@@ -277,20 +286,10 @@
         plugins: { legend: { display: false } },
         scales: {
           x: {
-            title: {
-              text: "COP Position — Antéro-Postérieur (mm)",
-              display: true,
-              font: { weight: "bold" }
-            },
-            min: Math.min(...COPy) - 50,
-            max: Math.max(...COPy) + 100
+            min: xMin,
+            max: xMax
           },
           y: {
-            title: {
-              text: "Fz — Force Verticale (N)",
-              display: true,
-              font: { weight: "bold" }
-            },
             min: 0,
             max: Math.max(...Fz) + 100
           }
@@ -298,7 +297,7 @@
       }
     });
   }
-
+  
   // =====================================================================
   // 🎥 GRF VECTORS 3D (Three.js)
   // =====================================================================
@@ -307,25 +306,43 @@
     const container = document.getElementById(containerId);
     if (!container || !data) return;
 
-    container.innerHTML = "";
+    const Fx_raw = [...data.Fx];
+    const Fy_raw = [...data.Fy];
+    const Fz = data.Fz;
+    const COPx_raw = [...data.COPx];
+    const COPy_raw = [...data.COPy];
 
-    const width  = container.clientWidth  || 600;
-    const height = container.clientHeight || 400;
-
-    const Fx = data.Fx, Fy = data.Fy, Fz = data.Fz;
-    const COPx = data.COPx, COPy = data.COPy;
-
-    // Indices en appui réel
-    const stanceIdx = Fx.map((_, i) => i).filter(i => Fz[i] > 20);
+    // 🔹 Indices en appui
+    const stanceIdx = Fx_raw.map((_, i) => i).filter(i => Fz[i] > 20);
     if (!stanceIdx.length) return;
+
+    // 🔹 Détection sens marche (variation CoP AP)
+    const first = stanceIdx[0];
+    const last = stanceIdx[stanceIdx.length - 1];
+    const dCoP = COPy_raw[last] - COPy_raw[first];
+
+    let Fx = Fx_raw, Fy = Fy_raw, COPx = COPx_raw, COPy = COPy_raw;
+    
+    if (dCoP < 0) {
+      console.warn("↩️ Auto-flip 3D : marche vers arrière détectée");
+      Fx  = Fx.map(v => -v);
+      Fy  = Fy.map(v => -v);
+      COPx = COPx.map(v => -v);
+      COPy = COPy.map(v => -v);
+    }
+  
 
     const mmToM = 0.001;
     const NtoM  = 0.0001;
 
+    // 🔹 Dimensions du conteneur → FIX width error
+    const width  = container.clientWidth  || 600;
+    const height = container.clientHeight || 400;
+
     // ----- SCÈNE + CAMERA -----
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf4f5f7);
-    scene.rotation.z = Math.PI; // orientation par défaut
+
 
     const camera = new THREE.PerspectiveCamera(55, width / height, 0.01, 10);
     camera.position.set(0, -0.65, 0.42);
@@ -370,6 +387,8 @@
       new THREE.MeshStandardMaterial({ color: 0x1f1f1f })
     );
     plate.position.set(0, 0, -0.00005);
+
+
     scene.add(plate);
 
     // ----- LUMIÈRE -----
@@ -393,7 +412,7 @@
 
     // ----- FLÈCHES GRF 3D (HQ) -----
     // ----- FLÈCHES GRF 3D — Ultra nettes & pointe courte -----
-    const arrowColor = new THREE.Color("#0c7deeff");
+    const arrowColor = new THREE.Color("#0c7dee");
 
     // Anti-aliasing super propre
     renderer.setPixelRatio(window.devicePixelRatio || 2.0);
@@ -647,9 +666,181 @@
     Chart.register(colorbarPlugin);
   }
 
+
+function _plotCycleCurveCompare(container, key, title, py1, py2) {
+    const side1 = py1.force.plate_side;
+    const side2 = py2.force.plate_side;
+
+    const cycle1 = py1.force[`percent_cycle_${side1}`]?.[0]?.[key];
+    const cycle2 = py2.force[`percent_cycle_${side2}`]?.[0]?.[key];
+
+    if (!cycle1 || !cycle2) return;
+
+    const x = Array.from({ length: 101 }, (_, i) => i);
+
+    const card = createCard(container);
+    const canvas = document.createElement("canvas");
+    card.appendChild(canvas);
+
+    new Chart(canvas, {
+        type: "line",
+        data: {
+            labels: x,
+            datasets: [
+                {
+                    label: "Essai 1",
+                    data: cycle1,
+                    borderColor: "#e63946",
+                    pointRadius: 0,
+                    borderWidth: 2
+                },
+                {
+                    label: "Essai 2",
+                    data: cycle2,
+                    borderColor: "#355474",
+                    pointRadius: 0,
+                    borderWidth: 2
+                }
+            ]
+        },
+        options: {
+            ...baseOptions(title, "% stance phase", `${title} (N)`),
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: {
+                        boxWidth: 14,
+                        padding: 12,
+                        color: "#222"
+                    }
+                }
+            }
+        }
+    });
+}
+
+function _plotCOPCompare(container, py1, py2) {
+    const card = createCard(container, true);
+    const canvas = document.createElement("canvas");
+    card.appendChild(canvas);
+
+    const pts1 = _extractCOP(py1.force).map(p => ({ x:p.x, y:p.y }));
+    const pts2 = _extractCOP(py2.force).map(p => ({ x:p.x, y:p.y }));
+
+    new Chart(canvas, {
+        type: "scatter",
+        data: {
+            datasets: [
+                {
+                    label: "Essai 1",
+                    data: pts1,
+                    pointRadius: 2,
+                    backgroundColor: "#e63946"
+                },
+                {
+                    label: "Essai 2",
+                    data: pts2,
+                    pointRadius: 2,
+                    backgroundColor: "#355474"
+                }
+            ]
+        },
+        options: {
+            ...baseOptions("CoP Comparison", "ML (mm)", "AP (mm)"),
+            aspectRatio: 1,
+            scales: {
+                x: { min: -250, max: 250 },
+                y: { min: -250, max: 250 }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: "top",
+                    labels: {
+                        padding: 10,
+                        boxWidth: 14
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+  function _extractCOP(force) {
+      const pts = [];
+      const { COPx, COPy, Fz } = force;
+      for (let i = 0; i < Fz.length; i++) {
+          if (Fz[i] < 20) continue;
+          pts.push({ x: COPx[i] - 250, y: COPy[i] - 250 });
+      }
+      return pts;
+  }
+
+  // --- 3D ---
+  function _plot3DCompare(py1, py2, containerId) {
+      // 👉 Réutiliser addGRFVectorPlot3D mais avec couleurs Essai1/Essai2
+      Kinetics.addGRFVectorPlot3D(containerId, "grf"); // TODO: étendre à 2 essais
+  }
+
   // =====================================================================
   // 🌍 EXPORT — Interface accessible depuis le reste de l’app
   // =====================================================================
+
+  global.KineticsCompare = {
+    render2D(py1, py2, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = ""; // clean
+
+        _plotCycleCurveCompare(container, "Fz", "Vertical GRF", py1, py2);
+        _plotCycleCurveCompare(container, "Fy", "AP GRF", py1, py2);
+        _plotCycleCurveCompare(container, "Fx", "ML GRF", py1, py2);
+        _plotCOPCompare(container, py1, py2);
+    },
+
+    render3D(py1, py2, containerId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+  
+      container.innerHTML = ""; // reset
+  
+      // Création des 2 zones 3D côte à côte
+      const row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.gap = "20px";
+      row.style.width = "100%";
+      container.appendChild(row);
+  
+      const cont1 = document.createElement("div");
+      cont1.id = containerId + "-essai1";
+      cont1.className = "grf-card grf-big";
+      cont1.style.flex = "1";
+      row.appendChild(cont1);
+
+      // --- Carte Essai 2
+      const cont2 = document.createElement("div");
+      cont2.id = containerId + "-essai2";
+      cont2.className = "grf-card grf-big";
+      cont2.style.flex = "1";
+      row.appendChild(cont2);
+
+  
+      // Affichage 3D Essai 1 (rouge)
+      const dataBackup = data;
+      data = py1.force;
+      Kinetics.addGRFVectorPlot3D(cont1.id, "grf");
+      data = dataBackup;
+  
+      // Affichage 3D Essai 2 (bleu)
+      data = py2.force;
+      Kinetics.addGRFVectorPlot3D(cont2.id, "grf");
+      data = dataBackup;
+  }
+  
+  };
+
 
   global.Kinetics = {
     setData,             // injection des données Python -> Vue complète
