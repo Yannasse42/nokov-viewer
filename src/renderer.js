@@ -300,6 +300,42 @@ window.addEventListener("DOMContentLoaded", () => {
           });
         });
       });
+
+
+      document.querySelectorAll('input[name="kinetic-dim-compare"]').forEach(radio => {
+        radio.addEventListener("change", e => {
+    
+            if (!currentPyCompare1 || !currentPyCompare2) return;
+    
+            const kineticArea = document.getElementById("kinetic-graph-area-compare");
+            if (!kineticArea) {
+                console.warn("⚠ kinetic-graph-area-compare absent → switch ignoré");
+                return;
+            }
+    
+            const is3D = (e.target.value === "3d");
+    
+            // RESET
+            kineticArea.innerHTML = "";
+    
+            if (!is3D) {
+                // Mode 2D : affichage comparatif GRF/CoP
+                KineticsCompare.render2D(currentPyCompare1, currentPyCompare2, "kinetic-graph-area-compare");
+                return;
+            }
+    
+            // Mode 3D
+            const container3D = document.createElement("div");
+            container3D.id = "grf-3d-container-compare";
+            container3D.classList.add("grf-card", "grf-big");
+            kineticArea.appendChild(container3D);
+    
+            requestAnimationFrame(() => {
+                KineticsCompare.render3D(currentPyCompare1, currentPyCompare2, "grf-3d-container-compare");
+            });
+        });
+    });
+    
       
     
       
@@ -641,6 +677,14 @@ window.addEventListener("DOMContentLoaded", () => {
         
         UIManager.showTabs("compare");
         UIManager.activateTab("tab-curves-compare");
+        
+        // 🔥 Activer la cinétique comparée si force disponible 🦶
+        if (py1.force && py2.force) {
+            const kineticArea = document.getElementById("kinetic-graph-area-compare");
+            kineticArea.innerHTML = ""; // nettoyage du placeholder
+
+            KineticsCompare.render2D(py1, py2, "kinetic-graph-area-compare");
+        }
 
 
     });

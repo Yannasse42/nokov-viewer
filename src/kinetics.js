@@ -327,9 +327,25 @@
       console.warn("↩️ Auto-flip 3D : marche vers arrière détectée");
       Fx  = Fx.map(v => -v);
       Fy  = Fy.map(v => -v);
-      COPx = COPx.map(v => -v);
-      COPy = COPy.map(v => -v);
     }
+
+    // Convertit CoP en coordonnées centrées plateforme avec gestion flip
+    function copToPlatform(i) {
+      let x = COPx[i];
+      let y = COPy[i];
+
+      if (dCoP < 0) {
+        x = 500 - x;
+        y = 500 - y;
+      }
+
+      return {
+        x: (x - 250) * mmToM,
+        y: (y - 250) * mmToM
+      };
+    }
+
+
   
 
     const mmToM = 0.001;
@@ -397,13 +413,11 @@
     scene.add(light);
 
     // ----- TRAJECTOIRE COP -----
-    const copPoints = stanceIdx.map(i =>
-      new THREE.Vector3(
-        (COPx[i] - 250) * mmToM,
-        (COPy[i] - 250) * mmToM,
-        0
-      )
-    );
+    const copPoints = stanceIdx.map(i => {
+      const p = copToPlatform(i);
+      return new THREE.Vector3(p.x, p.y, 0);
+    });
+
     const copLine = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints(copPoints),
       new THREE.LineBasicMaterial({ color: 0xdf3030 })
@@ -442,8 +456,10 @@
     stanceIdx.forEach((idx, k) => {
       if (k % step !== 0) return;
 
-      const x0 = (COPx[idx] - 250) * mmToM;
-      const y0 = (COPy[idx] - 250) * mmToM;
+      const p0 = copToPlatform(idx);
+      const x0 = p0.x;
+      const y0 = p0.y;
+
 
       const dx = Fx[idx] * NtoM;
       const dy = Fy[idx] * NtoM;
@@ -503,11 +519,9 @@
       if (mode === "cop") {
         // Mode CoP : point rouge qui se déplace, toutes flèches visibles
         marker.visible = true;
-        marker.position.set(
-          (COPx[i] - 250) * mmToM,
-          (COPy[i] - 250) * mmToM,
-          0.005
-        );
+        const p = copToPlatform(i);
+        marker.position.set(p.x, p.y, 0.005);
+
         arrows.forEach(a => (a.visible = true));
 
       } else if (mode === "grf") {
